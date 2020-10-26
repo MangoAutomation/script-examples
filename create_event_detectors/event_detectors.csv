@@ -1,0 +1,8 @@
+equipmentType,name,level,duration,type,limit,state,inverted
+Circuit Breaker,Status,WARNING,0,MULTISTATE_STATE,,0,true
+Circuit Breaker,Voltage L1-N,URGENT,0,LOW_LIMIT,200,,
+Circuit Breaker,Voltage L1-N,URGENT,0,HIGH_LIMIT,250,,
+Circuit Breaker,Voltage L2-N,URGENT,0,LOW_LIMIT,200,,
+Circuit Breaker,Voltage L2-N,URGENT,0,HIGH_LIMIT,250,,
+Circuit Breaker,Voltage L3-N,URGENT,0,LOW_LIMIT,200,,
+Circuit Breaker,Voltage L3-N,URGENT,0,HIGH_LIMIT,250,,
