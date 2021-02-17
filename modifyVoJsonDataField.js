@@ -1,7 +1,7 @@
 /**
 * This script will access the data field of a user to modify it
 */
- const Common = Java.type('com.serotonin.m2m2.Common');
+const Common = Java.type('com.serotonin.m2m2.Common');
 const usersService = services.usersService;
 
 
@@ -21,7 +21,7 @@ try {
     console.log('string: ' + editedAdmin.getData().at('/string'));
     console.log('emptyString: ' + editedAdmin.getData().at('/emptyString'));
     console.log('missing: ' + editedAdmin.getData().at('/missing'));
-    
+
     //Test for empty node
     if(editedAdmin.getData().at('/missing').isEmpty()) {
         console.log('found missing node');
