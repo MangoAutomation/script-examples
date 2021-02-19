@@ -49,6 +49,10 @@ for (const [equipmentType, eds1] of groupBy(eventDetectors, 'equipmentType')) {
                     detector.setInverted(eventDetector.inverted === 'true');
                 }
 
+                if (eventDetector.eventHandlerXid) {
+                    detector.setEventHandlerXids([eventDetector.eventHandlerXid]);
+                }
+
                 try {
                     // create or update the data point
                     if (detector.getId() < 0) {
