@@ -5,7 +5,6 @@
 
 // imports
 const pointService = services.dataPointService;
-const dataSourceService = services.dataSourceService;
 const roleService = services.roleService;
 const HashSet = Java.type('java.util.HashSet');
 const MangoPermission = Java.type('com.infiniteautomation.mango.permission.MangoPermission');
@@ -14,7 +13,7 @@ const MangoPermission = Java.type('com.infiniteautomation.mango.permission.Mango
 const role = roleService.get('user').getRole();
 
 let index = 0;
-const points = pointService.buildQuery()
+pointService.buildQuery()
     // set the data source XID here
     .equal('dataSourceXid', 'internal_mango_monitoring_ds')
     .query(point => {
