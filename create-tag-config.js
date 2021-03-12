@@ -27,6 +27,7 @@ for (let i = 0; i < tagsPerPoint; i++) {
 for (let i = 0; i < count; i++) {
     const copy = dataPointTemplate.copy();
     copy.setId(-1);
+    copy.setSeriesId(-1);
     copy.setXid(null);
     copy.setName(`Point ${i}`);
 
