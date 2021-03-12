@@ -42,11 +42,16 @@ for (const [equipmentType, eds1] of groupBy(eventDetectors, 'equipmentType')) {
                 if (eventDetector.duration) {
                     detector.setDuration(Number.parseInt(eventDetector.duration));
                 }
+
                 if (eventDetector.limit) {
                     detector.setLimit(Number.parseFloat(eventDetector.limit));
                 } else if (eventDetector.state) {
-                    detector.setState(Number.parseInt(eventDetector.state, 10));
-                    detector.setInverted(eventDetector.inverted === 'true');
+                    if (eventDetector.type === 'MULTISTATE_STATE') {
+                        detector.setState(Number.parseInt(eventDetector.state, 10));
+                        detector.setInverted(eventDetector.inverted.toLowerCase() === 'true');
+                    } else if (eventDetector.type === 'BINARY_STATE') {
+                        detector.setState(eventDetector.state.toLowerCase() === 'true' || eventDetector.state === '1');
+                    }
                 }
 
                 if (eventDetector.eventHandlerXid) {
