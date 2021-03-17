@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2021 Radix IoT LLC. All rights reserved.
+ */
+
+// NOTE: If it does not seem to be working check if your CSV file has a UTF BOM mark at the start of the file!
+
 load('./util.js');
 
 const dataPointService = services.dataPointService;
