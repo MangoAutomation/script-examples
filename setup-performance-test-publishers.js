@@ -5,6 +5,7 @@ const VirtualDataSourceDefinition = Java.type('com.serotonin.m2m2.virtual.Virtua
 const PersistentPointVO = Java.type('com.serotonin.m2m2.persistent.pub.PersistentPointVO');
 const PersistentPublisherDefinition = Java.type('com.serotonin.m2m2.persistent.PersistentPublisherDefinition');
 const ArrayList = Java.type('java.util.ArrayList');
+const LogLevel = Java.type('com.serotonin.m2m2.util.log.LogLevel');
 
 // import services
 const dataPointService = services.dataPointService;
@@ -18,6 +19,7 @@ const pointsPerDataSource = 10; // number of points per data source
 const tagsPerPoint = 0; // actual number of tags added to each point
 const possibleTagKeys = 0; // number of tag keys that are possible
 const possibleTagValues = 0; // number of values per tag that are possible
+const createPublishers = false;
 const sharedKey = '';
 const host = 'localhost';
 const firstPort = 8090;
@@ -55,7 +57,7 @@ for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
     dataPoint.setLoggingType(2); // ALL
     dataPoint.setPointLocator(locator);
 
-    const publishedPoints = new ArrayList(pointsPerDataSource);
+    const publishedPoints = createPublishers ? new ArrayList(pointsPerDataSource) : null;
 
     // copy the template point, save it, and add to our list of published points
     for (let i = 0; i < pointsPerDataSource; i++) {
@@ -76,31 +78,37 @@ for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
 
         dataPointService.insert(copy);
 
-        const publishedPoint = new PersistentPointVO();
-        publishedPoint.setDataPointId(copy.getId());
-        publishedPoints.add(publishedPoint);
+        if (createPublishers) {
+            const publishedPoint = new PersistentPointVO();
+            publishedPoint.setDataPointId(copy.getId());
+            publishedPoints.add(publishedPoint);
+        }
     }
 
     // start the data source after adding all points
-    dataSourceService.restart(dataSource.getXid(), true, false);
+    // dataSourceService.restart(dataSource.getXid(), true, false);
 
-    const publisherDef = ModuleRegistry.getDefinition(PersistentPublisherDefinition.class);
-    const publisher = publisherDef.baseCreatePublisherVO();
-    publisher.setEnabled(true);
-    publisher.setPoints(publishedPoints);
-    publisher.setName(`Performance test ${dsCount}`);
-    publisher.setPublishType(3); // LOGGED ONLY
-    publisher.setCacheWarningSize(365000);
-    publisher.setCacheDiscardSize(370000);
-    publisher.setHost(host);
-    publisher.setPort(firstPort + dsCount);
-    publisher.setAuthorizationKey('');
-    publisher.setSharedKey(sharedKey);
-    publisher.setKeySize(128);
-    publisher.setSyncRealTime(true);
-    publisher.setSyncPattern('0 0/15 * * * ?');
-    publisher.setHistoryCutoffPeriods(15);
-    publisher.setHistoryCutoffPeriodType(1); // SECONDS
-    publisher.setMaxPointValuesToSend(20000);
-    publisherService.insert(publisher);
+    if (createPublishers) {
+        const publisherDef = ModuleRegistry.getDefinition(PersistentPublisherDefinition.class);
+        const publisher = publisherDef.baseCreatePublisherVO();
+        publisher.setEnabled(true);
+        publisher.setPoints(publishedPoints);
+        publisher.setName(`Performance test ${dsCount}`);
+        publisher.setPublishType(3); // LOGGED ONLY
+        publisher.setCacheWarningSize(365000);
+        publisher.setCacheDiscardSize(370000);
+        publisher.setHost(host);
+        publisher.setPort(firstPort + dsCount);
+        publisher.setAuthorizationKey('');
+        publisher.setSharedKey(sharedKey);
+        publisher.setKeySize(128);
+        publisher.setSyncRealTime(true);
+        publisher.setSyncPattern('0 0/15 * * * ?');
+        publisher.setHistoryCutoffPeriods(15);
+        publisher.setHistoryCutoffPeriodType(1); // SECONDS
+        publisher.setMaxPointValuesToSend(20000);
+        publisher.setLogLevel(LogLevel.INFO);
+        publisher.setSyncResponseTimeout(3600000);
+        publisherService.insert(publisher);
+    }
 }
