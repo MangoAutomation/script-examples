@@ -1,3 +1,8 @@
+/**
+ * These tests will output metrics to the mango log
+ *  be sure to modify your log4j2.xml settings to
+ *  capture the script log output too.
+ */
 // import classes
 const Common = Java.type('com.serotonin.m2m2.Common');
 const LogStopWatch = Java.type('com.serotonin.log.LogStopWatch');
