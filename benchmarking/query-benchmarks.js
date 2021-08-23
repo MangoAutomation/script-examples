@@ -1,0 +1,60 @@
+// import classes
+const Common = Java.type('com.serotonin.m2m2.Common');
+const LogStopWatch = Java.type('com.serotonin.log.LogStopWatch');
+const DataPointTagsDao = Java.type('com.serotonin.m2m2.db.dao.DataPointTagsDao');
+
+// import services
+const dataPointService = services.dataPointService;
+const dataSourceService = services.dataSourceService;
+const publisherService = services.publisherService;
+
+//TODO create non-admin user to test with permissions
+const users = [];
+users.push(Common.getUser());
+users.push(Common.getUser());
+
+const iterations = users.length;
+
+for(let i=0; i<iterations; i++) {
+
+    log.info('Test iteration ' + i + ' with user ' + users[i].getPermissionHolderName());
+    //Test data point tags
+    const stopwatch = new LogStopWatch();
+    const keys = DataPointTagsDao.getInstance().getTagKeys(users[i]);
+    stopwatch.stop(() => 'Collected ' + keys.size() + ' tag keys');
+    
+    const tags = {};
+    stopwatch.reset();
+    const keyIt = keys.iterator();
+    while(keyIt.hasNext()) {
+        let key = keyIt.next();
+        tags[key] = DataPointTagsDao.getInstance().getTagValuesForKey(key, users[i]);
+    }
+    stopwatch.stop(() => 'Retrieved all tag key values.');
+    
+    //Test data point queries
+    const testKey = keys.iterator().next();
+    const testTagValue = tags[testKey].iterator().next();
+    let count = 0;
+    if(i%2 == 0) {
+        log.info('Lazy loading fields for points')
+    }
+    stopwatch.reset();
+    dataPointService.buildQuery()
+        .equal('tags.' + testKey, testTagValue)
+        .query(point => {
+            count++;
+            //TODO activate the lazy loading of fields, permissions and tags...
+            if(i%2 == 0) {
+                //These all make extra queries and WILL slow things down
+                point.getTags();
+                point.getReadPermission();
+                point.getEditPermission();
+                point.getSetPermission();
+            }
+        }, 100, 0);
+    stopwatch.stop(() => 'Query found ' + count + ' data points for tag ' + testKey + '=' + testTagValue);
+
+    //TODO test publisher queries/load times
+    //TODO test event queries/load times
+}
