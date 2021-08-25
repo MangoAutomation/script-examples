@@ -18,7 +18,7 @@ const eventDetectorsService = services.eventDetectorsService;
 // test setup
 const numDataSources = 1; // number of data sources (and publishers) to create
 const updatePeriod = 5; // update period in seconds
-const pointsPerDataSource = 10; // number of points per data source
+const pointsPerDataSource = 300; // number of points per data source
 const tagsPerPoint = 2; // actual number of tags added to each point
 const possibleTagKeys = 2; // number of tag keys that are possible
 const possibleTagValues = 2; // number of values per tag that are possible
