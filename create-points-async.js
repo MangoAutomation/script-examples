@@ -3,10 +3,14 @@ const DataPointVO = Java.type('com.serotonin.m2m2.vo.DataPointVO');
 const ModuleRegistry = Java.type('com.serotonin.m2m2.module.ModuleRegistry');
 const VirtualDataSourceDefinition = Java.type('com.serotonin.m2m2.virtual.VirtualDataSourceDefinition');
 const CompletableFuture = Java.type('java.util.concurrent.CompletableFuture');
+const Common = Java.type('com.serotonin.m2m2.Common');
+const PointValueDao = Java.type('com.serotonin.m2m2.db.dao.PointValueDao');
+const DataGenerator = Java.type('com.infiniteautomation.mango.util.DataGenerator');
 
 // import services
 const dataPointService = services.dataPointService;
 const dataSourceService = services.dataSourceService;
+const pointValueDao = Common.getBean(PointValueDao.class);
 
 // configuration parameters
 const numDataSources = 1; // number of data sources to create
@@ -15,6 +19,12 @@ const pointsPerDataSource = 100000; // number of points per data source
 const tagsPerPoint = 5; // actual number of tags added to each point
 const possibleTagKeys = 10; // number of tag keys that are possible
 const possibleTagValues = 30; // number of values per tag that are possible
+
+// data generation for points
+const generatePointValues = false; // generate point values for every point
+const generateFrom = Date.parse('2021-01-01T00:00:00.000Z').valueOf(); // epoch ms
+const generateTo = new Date().valueOf(); // epoch ms
+const generateInterval = 5000; // ms
 
 const tags = {};
 for (let i = 0; i < possibleTagKeys; i++) {
@@ -27,6 +37,8 @@ for (let i = 0; i < possibleTagKeys; i++) {
 const tagKeys = Object.keys(tags);
 const futures = [];
 const startTime = new Date();
+const generator = new DataGenerator(generateFrom, generateTo, generateInterval);
+const inserter = generator.createInserter(pointValueDao, 10000);
 
 for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
     const dataSourceDef = ModuleRegistry.getDefinition(VirtualDataSourceDefinition.class);
@@ -67,8 +79,12 @@ for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
             pointTags[key] = values[Math.round(Math.random() * (values.length - 1))];
         }
         copy.setTags(pointTags);
-        
-        futures.push(dataPointService.insertAsync(copy));
+
+        let future = dataPointService.insertAsync(copy);
+        if (generatePointValues) {
+            future = future.thenAccept(inserter);
+        }
+        futures.push(future);
     }
 }
 
