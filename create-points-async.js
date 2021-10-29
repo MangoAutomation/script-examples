@@ -31,7 +31,7 @@ const startTime = new Date();
 for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
     const dataSourceDef = ModuleRegistry.getDefinition(VirtualDataSourceDefinition.class);
     const dataSource = dataSourceDef.baseCreateDataSourceVO();
-    dataSource.setName(`aaPerformance test ${dsCount}`);
+    dataSource.setName(`Performance test ${dsCount}`);
     dataSource.setUpdatePeriodType(1); // SECONDS
     dataSource.setUpdatePeriods(updatePeriod);
     dataSourceService.insert(dataSource);
