@@ -5,7 +5,7 @@ const VirtualDataSourceDefinition = Java.type('com.serotonin.m2m2.virtual.Virtua
 const CompletableFuture = Java.type('java.util.concurrent.CompletableFuture');
 const Common = Java.type('com.serotonin.m2m2.Common');
 const PointValueDao = Java.type('com.serotonin.m2m2.db.dao.PointValueDao');
-const DataGenerator = Java.type('com.infiniteautomation.mango.util.DataGenerator');
+const BrownianPointValueGenerator = Java.type('com.infiniteautomation.mango.pointvalue.generator.BrownianPointValueGenerator');
 
 // import services
 const dataPointService = services.dataPointService;
@@ -14,7 +14,7 @@ const pointValueDao = Common.getBean(PointValueDao.class);
 
 // configuration parameters
 const numDataSources = 1; // number of data sources to create
-const updatePeriod = 5; // update period in seconds
+const updatePeriod = 5000; // update period in milliseconds
 const pointsPerDataSource = 100000; // number of points per data source
 const tagsPerPoint = 5; // actual number of tags added to each point
 const possibleTagKeys = 10; // number of tag keys that are possible
@@ -37,21 +37,21 @@ for (let i = 0; i < possibleTagKeys; i++) {
 const tagKeys = Object.keys(tags);
 const futures = [];
 const startTime = new Date();
-const generator = new DataGenerator(generateFrom, generateTo, generateInterval);
+const generator = new BrownianPointValueGenerator(generateFrom, generateTo, generateInterval, 0, 100, 0.1);
 const inserter = generator.createInserter(pointValueDao, 10000);
 
 for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
     const dataSourceDef = ModuleRegistry.getDefinition(VirtualDataSourceDefinition.class);
     const dataSource = dataSourceDef.baseCreateDataSourceVO();
     dataSource.setName(`Performance test ${dsCount}`);
-    dataSource.setUpdatePeriodType(1); // SECONDS
+    dataSource.setUpdatePeriodType(8); // MILLISECONDS
     dataSource.setUpdatePeriods(updatePeriod);
     dataSourceService.insert(dataSource);
 
     const locator = dataSource.createPointLocator();
     locator.setDataTypeId(3); // NUMERIC
     locator.setChangeTypeId(3); // INCREMENT_ANALOG
-    locator.getIncrementAnalogChange().setStartValue('0');
+    locator.getIncrementAnalogChange().setStartValue('50');
     locator.getIncrementAnalogChange().setMax(100);
     locator.getIncrementAnalogChange().setMin(0);
     locator.getIncrementAnalogChange().setChange(0.1);
