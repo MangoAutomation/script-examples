@@ -15,6 +15,10 @@ for (var key in EXTERNAL_POINTS) {
 // ping each host once
 for (var host in results) {
     try {
+        // pingUtility.ping() has two additional optional arguments: count and timeout (ms)
+        // e.g. pingUtility.ping(host, 4, 10000)
+        // result is {count, packetLoss, minimum, maximum, average}
+        // see https://github.com/MangoAutomation/ma-core-public/blob/main/Core/src/com/serotonin/m2m2/rt/script/ping/PingUtility.java
         results[host] = pingUtility.ping(host);
     } catch (e) {
         // ignore, leave null
@@ -31,6 +35,7 @@ for (var key in EXTERNAL_POINTS) {
             case 'Ping success': point.set(result != null); break;
             case 'Ping time (Average)': point.set(result == null ? -1 : result.average); break;
             case 'Packet loss': point.set(result == null ? -1 : result.packetLoss); break;
+            case 'Good connection': point.set(result == null ? false : result.packetLoss < 10.0); break;
         }
     }
 }
