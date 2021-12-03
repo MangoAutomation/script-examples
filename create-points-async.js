@@ -50,12 +50,11 @@ for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
 
     const locator = dataSource.createPointLocator();
     locator.setDataTypeId(3); // NUMERIC
-    locator.setChangeTypeId(3); // INCREMENT_ANALOG
-    locator.getIncrementAnalogChange().setStartValue('50');
-    locator.getIncrementAnalogChange().setMax(100);
-    locator.getIncrementAnalogChange().setMin(0);
-    locator.getIncrementAnalogChange().setChange(0.1);
-    locator.getIncrementAnalogChange().setRoll(true);
+    locator.setChangeTypeId(2); // BROWNIAN
+    locator.getBrownianChange().setStartValue('50');
+    locator.getBrownianChange().setMax(100);
+    locator.getBrownianChange().setMin(0);
+    locator.getBrownianChange().setMaxChange(0.1);
 
     const dataPoint = new DataPointVO();
     dataPoint.setDataSourceId(dataSource.getId());
