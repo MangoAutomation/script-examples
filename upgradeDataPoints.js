@@ -8,7 +8,7 @@ let count = 0;
 
 const upgradePoint = function(point) {
     try {
-        point.getPointLocator().setDataTypeId(DataTypes.MULTISTATE);
+        point.getPointLocator().setDataType(DataTypes.MULTISTATE);
         dataPointService.update(point.getXid(), point);
         count++;
     } catch(e) {

@@ -7,6 +7,7 @@ const PersistentPublisherDefinition = Java.type('com.serotonin.m2m2.persistent.P
 const ArrayList = Java.type('java.util.ArrayList');
 const LogLevel = Java.type('com.serotonin.m2m2.util.log.LogLevel');
 const MangoPermission = Java.type('com.infiniteautomation.mango.permission.MangoPermission');
+const DataTypes = Java.type('com.serotonin.m2m2.DataTypes');
 
 // import services
 const dataPointService = services.dataPointService;
@@ -60,7 +61,7 @@ for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
     dataSourceService.insert(dataSource);
 
     const locator = dataSource.createPointLocator();
-    locator.setDataTypeId(3); // NUMERIC
+    locator.setDataType(DataTypes.NUMERIC);
     locator.setChangeTypeId(3); // INCREMENT_ANALOG
     locator.getIncrementAnalogChange().setStartValue('0');
     locator.getIncrementAnalogChange().setMax(100);

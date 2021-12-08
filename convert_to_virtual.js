@@ -17,15 +17,7 @@ function downloadJson(options) {
 
 function convertToVirtual(options) {
     const {dataSourceXids, changeXids} = options;
-    
-    const DATA_TYPE_CODES = {
-        1: 'BINARY',
-        2: 'MULTISTATE',
-        3: 'NUMERIC',
-        4: 'ALPHANUMERIC',
-        5: 'IMAGE'
-    };
-    
+
     const POINT_LOCATORS = {
         'BINARY': {
             dataType: 'BINARY',
@@ -78,7 +70,7 @@ function convertToVirtual(options) {
     
     const dataTypes = {};
     for (const dp of dataPoints) {
-        dataTypes[dp.getXid()] = DATA_TYPE_CODES[dp.getPointLocator().getDataTypeId()];
+        dataTypes[dp.getXid()] = dp.getPointLocator().getDataType().name();
     }
 
     const exported = services.emportService.export({
