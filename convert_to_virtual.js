@@ -94,9 +94,6 @@ function convertToVirtual(options) {
     
     for (const dp of data.dataPoints) {
         const dataType = dataTypes[dp.xid];
-        if (dataType === 'IMAGE') {
-            throw new Error(`Datapoint ${dp.xid} has data type IMAGE which is unsupported by virtual data sources`);
-        }
         if (changeXids) {
             dp.xid = services.dataPointService.generateUniqueXid();
             dp.dataSourceXid = dsXidMap[dp.dataSourceXid];
