@@ -6,7 +6,7 @@ const pattern = 'SS';
 const maxReadRegisterCount = 100;
 let count = 0;
 services.dataSourceService.buildQuery()
-    .like('name', pattern)
+    .match('name', pattern)
     .equal('dataSourceType', 'MODBUS_IP')
     .query(ds => { 
         ds.setMaxReadRegisterCount(maxReadRegisterCount);
