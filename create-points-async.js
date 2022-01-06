@@ -13,9 +13,9 @@ const dataSourceService = services.dataSourceService;
 const pointValueDao = Common.getBean(PointValueDao.class);
 
 // configuration parameters
-const numDataSources = 1; // number of data sources to create
+const numDataSources = 3; // number of data sources to create
 const updatePeriod = 5000; // update period in milliseconds
-const pointsPerDataSource = 100000; // number of points per data source
+const pointsPerDataSource = 30000; // number of points per data source
 const tagsPerPoint = 5; // actual number of tags added to each point
 const possibleTagKeys = 10; // number of tag keys that are possible
 const possibleTagValues = 30; // number of values per tag that are possible
@@ -61,6 +61,7 @@ for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
     dataPoint.setEnabled(true);
     dataPoint.setLoggingType(2); // ALL
     dataPoint.setPointLocator(locator);
+    dataPoint.setDeviceName(dataSource.getName());
 
     // copy the template point, and save it
     for (let i = 0; i < pointsPerDataSource; i++) {
