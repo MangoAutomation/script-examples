@@ -3,6 +3,11 @@
 
 const Files = Java.type('java.nio.file.Files');
 
+/**
+ * IMPORTANT NOTE: this will read the file as is so one Gotcha is that the first line of the file may contain 
+ *  some invisible bytes that get appened to the start of the first column header which will make 
+ *  this script fail.
+ */
 function readCsv(fileStore, filePath) {
     const path = services.fileStoreService.getPathForRead(fileStore, filePath);
     const lines = Array.from(Files.readAllLines(path));
