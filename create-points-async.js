@@ -6,6 +6,7 @@ const CompletableFuture = Java.type('java.util.concurrent.CompletableFuture');
 const Common = Java.type('com.serotonin.m2m2.Common');
 const PointValueDao = Java.type('com.serotonin.m2m2.db.dao.PointValueDao');
 const BrownianPointValueGenerator = Java.type('com.infiniteautomation.mango.pointvalue.generator.BrownianPointValueGenerator');
+const DataType = Java.type('com.serotonin.m2m2.DataType');
 
 // import services
 const dataPointService = services.dataPointService;
@@ -37,7 +38,7 @@ for (let i = 0; i < possibleTagKeys; i++) {
 const tagKeys = Object.keys(tags);
 const futures = [];
 const startTime = new Date();
-const generator = new BrownianPointValueGenerator(generateFrom, generateTo, generateInterval, 0, 100, 0.1);
+const generator = new BrownianPointValueGenerator(generateFrom, generateTo, generateInterval);
 const inserter = generator.createInserter(pointValueDao, 10000);
 
 for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
@@ -49,7 +50,7 @@ for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
     dataSourceService.insert(dataSource);
 
     const locator = dataSource.createPointLocator();
-    locator.setDataTypeId(3); // NUMERIC
+    locator.setDataType(DataType.NUMERIC);
     locator.setChangeTypeId(2); // BROWNIAN
     locator.getBrownianChange().setStartValue('50');
     locator.getBrownianChange().setMax(100);
