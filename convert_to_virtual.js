@@ -78,7 +78,7 @@ function convertToVirtual(options) {
     
     const dataTypes = {};
     for (const dp of dataPoints) {
-        dataTypes[dp.getXid()] = DATA_TYPE_CODES[dp.getPointLocator().getDataTypeId()];
+        dataTypes[dp.getXid()] = DATA_TYPE_CODES[dp.getPointLocator().getDataType().getId()];
     }
 
     const exported = services.emportService.export({
