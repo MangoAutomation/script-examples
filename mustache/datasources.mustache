@@ -1,0 +1,47 @@
+"dataSources":[
+{{#zones}}{{#halls}}
+    {
+      "xid":"DS_{{zoneId}}_{{hallId}}",
+      "name":"{{zoneName}} - {{hallName}}",
+      "enabled":true,
+      "type":"META",
+      "alarmLevels":{
+        "SCRIPT_ERROR":"URGENT",
+        "CONTEXT_POINT_DISABLED":"URGENT",
+        "RESULT_TYPE_ERROR":"URGENT"
+      },
+      "purgeType":"YEARS",
+      "data":null,
+      "editPermission":[
+      ],
+      "purgeOverride":false,
+      "purgePeriod":1,
+      "readPermission":[
+      ]
+    },
+{{#rows}}{{#racks}}
+    {
+      "xid":"DS_{{zoneId}}_{{hallId}}_{{row}}_{{rack}}",
+      "name":"{{zoneName}} - {{hallName}} - {{row}}/{{rack}}",
+      "enabled":true,
+      "type":"VIRTUAL",
+      "alarmLevels":{
+        "POLL_ABORTED":"URGENT"
+      },
+      "purgeType":"YEARS",
+      "updatePeriods":5000,
+      "updatePeriodType":"MILLISECONDS",
+      "polling":true,
+      "quantize":false,
+      "useCron":false,
+      "data":null,
+      "editPermission":[
+      ],
+      "purgeOverride":false,
+      "purgePeriod":1,
+      "readPermission":[
+      ]
+    },
+{{/racks}}{{/rows}}
+{{/halls}}{{/zones}}
+]
