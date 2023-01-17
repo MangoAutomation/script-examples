@@ -19,10 +19,10 @@
       "readPermission":[
       ]
     },
-{{#rows}}{{#racks}}
+{{#rows}}
     {
-      "xid":"DS_{{zoneId}}_{{hallId}}_{{row}}_{{rack}}",
-      "name":"{{zoneName}} - {{hallName}} - {{row}}/{{rack}}",
+      "xid":"DS_{{zoneId}}_{{hallId}}_{{row}}",
+      "name":"{{zoneName}} - {{hallName}} - Row {{row}}",
       "enabled":true,
       "type":"VIRTUAL",
       "alarmLevels":{
@@ -42,6 +42,6 @@
       "readPermission":[
       ]
     },
-{{/racks}}{{/rows}}
+{{/rows}}
 {{/halls}}{{/zones}}
 ]
