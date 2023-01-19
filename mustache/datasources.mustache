@@ -1,47 +1,63 @@
 "dataSources":[
-{{#zones}}{{#halls}}
+{{#sites}}{{#dataHalls}}{{#powerCenters}}{{#devices}}
     {
-      "xid":"DS_{{zoneId}}_{{hallId}}",
-      "name":"{{zoneName}} - {{hallName}}",
-      "enabled":true,
-      "type":"META",
+      "xid":"DS_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
+      "name":"{{deviceName}}",
+      "enabled":false,
+      "type":"MODBUS_IP",
       "alarmLevels":{
-        "SCRIPT_ERROR":"URGENT",
-        "CONTEXT_POINT_DISABLED":"URGENT",
-        "RESULT_TYPE_ERROR":"URGENT"
+        "POINT_WRITE_EXCEPTION":"DO_NOT_LOG",
+        "POLL_ABORTED":"DO_NOT_LOG",
+        "DATA_SOURCE_EXCEPTION":"DO_NOT_LOG",
+        "POINT_READ_EXCEPTION":"DO_NOT_LOG"
       },
       "purgeType":"YEARS",
-      "data":null,
-      "editPermission":[
-      ],
-      "purgeOverride":false,
-      "purgePeriod":1,
-      "readPermission":[
-      ]
-    },
-{{#rows}}
-    {
-      "xid":"DS_{{zoneId}}_{{hallId}}_{{row}}",
-      "name":"{{zoneName}} - {{hallName}} - Row {{row}}",
-      "enabled":true,
-      "type":"VIRTUAL",
-      "alarmLevels":{
-        "POLL_ABORTED":"URGENT"
-      },
-      "purgeType":"YEARS",
-      "updatePeriods":5000,
-      "updatePeriodType":"MILLISECONDS",
-      "polling":true,
+      "updatePeriods":10,
+      "updatePeriodType":"SECONDS",
+      "transportType":"TCP",
+      "encapsulated":false,
+      "host":"{{host}}",
+      "lingerTime":-1,
+      "maxBackOffPeriodType":2,
+      "maxBackOffPeriods":5,
+      "port":502,
+      "scaleFactor":1.1,
+      "contiguousBatches":false,
+      "createSlaveMonitorPoints":false,
+      "discardDataDelay":0,
+      "ioLogFileSizeMBytes":1.0,
+      "logIO":false,
+      "maxHistoricalIOLogs":1,
+      "maxReadBitCount":2000,
+      "maxReadRegisterCount":125,
+      "maxWriteRegisterCount":120,
+      "multipleWritesOnly":false,
+      "retries":2,
+      "timeout":2500,
       "quantize":false,
       "useCron":false,
       "data":null,
       "editPermission":[
+        [
+          "ROLE_ADMIN"
+        ]
       ],
       "purgeOverride":false,
       "purgePeriod":1,
       "readPermission":[
+        [
+          "ROLE_SITE_{{siteName}}"
+        ],
+        [
+          "ROLE_MANAGER"
+        ],
+        [
+          "ROLE_ADMIN"
+        ],
+        [
+          "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+        ]
       ]
-    },
-{{/rows}}
-{{/halls}}{{/zones}}
+    }
+{{/devices}}{{/powerCenters}}{{/dataHalls}}{{/sites}}
 ]

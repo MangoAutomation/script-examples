@@ -35,8 +35,36 @@ const factory = new DefaultMustacheFactory(new FileStoreMustacheResolver({
 // create a mustache instance from the template
 const mustache = factory.compile('template.mustache');
 
+/*
+Contents of 4bdc811c-97d8-4ca8-aa7c-c6b4044779df:
+{
+    "sites": [
+        {
+            "siteName": "Site-A",
+            "dataHalls": [
+                {
+                    "dataHallName": "DH1",
+                    "powerCenters": [
+                        {
+                            "powerCenterName": "1A1",
+                            "devices": [
+                                {
+                                    "uniqueId": "123-XYZ",
+                                    "deviceName": "SD-Spare-1",
+                                    "host": "localhost",
+                                    "slaveId": 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+*/
 // load parameters from JSON store
-const parameters = services.jsonDataService.getDataAtPointer('f32bdeb1-3fc2-447b-8f61-40c0e7ec8045', '');
+const parameters = services.jsonDataService.getDataAtPointer('4bdc811c-97d8-4ca8-aa7c-c6b4044779df', '');
 const parametersMap = mapper.convertValue(parameters, Map);
 
 // execute template
