@@ -1,8 +1,8 @@
 "dataSources":[
-{{#sites}}{{#dataHalls}}{{#powerCenters}}{{#devices}}
+{{#sites}}{{#dataHalls}}{{#devices}}
     {
-      "xid":"DS_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-      "name":"{{deviceName}}",
+      "xid":"DS_{{site}}_{{dataHall}}_{{device}}",
+      "name":"{{device}}",
       "enabled":false,
       "type":"MODBUS_IP",
       "alarmLevels":{
@@ -46,7 +46,7 @@
       "purgePeriod":1,
       "readPermission":[
         [
-          "ROLE_SITE_{{siteName}}"
+          "ROLE_SITE_{{site}}"
         ],
         [
           "ROLE_MANAGER"
@@ -55,9 +55,9 @@
           "ROLE_ADMIN"
         ],
         [
-          "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+          "ROLE_DATAH_{{site}}_{{dataHall}}"
         ]
       ]
     }
-{{/devices}}{{/powerCenters}}{{/dataHalls}}{{/sites}}
+{{/devices}}{{/dataHalls}}{{/sites}}
 ]

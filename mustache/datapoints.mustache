@@ -1,7 +1,7 @@
 "dataPoints":[
-{{#sites}}{{#dataHalls}}{{#powerCenters}}{{#devices}}
+{{#sites}}{{#dataHalls}}{{#devices}}
     {
-      "xid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_BREAKER_DISCONNECTED",
+      "xid":"DP_{{site}}_{{dataHall}}_{{device}}_BREAKER_DISCONNECTED",
       "name":"Breaker Disconnected",
       "enabled":false,
       "loggingType":"ON_CHANGE_INTERVAL",
@@ -30,9 +30,9 @@
       "simplifyType":"NONE",
       "chartColour":"",
       "data":null,
-      "dataSourceXid":"DS_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
+      "dataSourceXid":"DS_{{site}}_{{dataHall}}_{{device}}",
       "defaultCacheSize":1,
-      "deviceName":"{{deviceName}}",
+      "deviceName":"{{device}}",
       "discardExtremeValues":false,
       "discardHighLimit":1.7976931348623157E308,
       "discardLowLimit":-1.7976931348623157E308,
@@ -49,7 +49,7 @@
       "purgePeriod":1,
       "readPermission":[
         [
-          "ROLE_SITE_{{siteName}}"
+          "ROLE_SITE_{{site}}"
         ],
         [
           "ROLE_MANAGER"
@@ -58,7 +58,7 @@
           "ROLE_ADMIN"
         ],
         [
-          "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+          "ROLE_DATAH_{{site}}_{{dataHall}}"
         ]
       ],
       "setExtremeHighLimit":1.7976931348623157E308,
@@ -70,9 +70,9 @@
       ],
       "tags":{
         "deviceType":"BRK-SE-MASTERPACK",
-        "site":"{{siteName}}",
-        "deviceID":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-        "dataHall":"{{dataHallName}}"
+        "site":"{{site}}",
+        "deviceID":"{{site}}_{{dataHall}}_{{device}}",
+        "dataHall":"{{dataHall}}"
       },
       "textRenderer":{
         "type":"BINARY",
@@ -84,7 +84,7 @@
       "tolerance":0.0
     },
     {
-      "xid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_BREAKER_CONNECTED",
+      "xid":"DP_{{site}}_{{dataHall}}_{{device}}_BREAKER_CONNECTED",
       "name":"Breaker Connected",
       "enabled":false,
       "loggingType":"ON_CHANGE_INTERVAL",
@@ -113,9 +113,9 @@
       "simplifyType":"NONE",
       "chartColour":"",
       "data":null,
-      "dataSourceXid":"DS_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
+      "dataSourceXid":"DS_{{site}}_{{dataHall}}_{{device}}",
       "defaultCacheSize":1,
-      "deviceName":"{{deviceName}}",
+      "deviceName":"{{device}}",
       "discardExtremeValues":false,
       "discardHighLimit":1.7976931348623157E308,
       "discardLowLimit":-1.7976931348623157E308,
@@ -132,7 +132,7 @@
       "purgePeriod":1,
       "readPermission":[
         [
-          "ROLE_SITE_{{siteName}}"
+          "ROLE_SITE_{{site}}"
         ],
         [
           "ROLE_MANAGER"
@@ -141,7 +141,7 @@
           "ROLE_ADMIN"
         ],
         [
-          "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+          "ROLE_DATAH_{{site}}_{{dataHall}}"
         ]
       ],
       "setExtremeHighLimit":1.7976931348623157E308,
@@ -153,9 +153,9 @@
       ],
       "tags":{
         "deviceType":"BRK-SE-MASTERPACK",
-        "site":"{{siteName}}",
-        "deviceID":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-        "dataHall":"{{dataHallName}}"
+        "site":"{{site}}",
+        "deviceID":"{{site}}_{{dataHall}}_{{device}}",
+        "dataHall":"{{dataHall}}"
       },
       "textRenderer":{
         "type":"BINARY",
@@ -167,7 +167,7 @@
       "tolerance":0.0
     },
     {
-      "xid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_BREAKER_READY_TO_CLOSE",
+      "xid":"DP_{{site}}_{{dataHall}}_{{device}}_BREAKER_READY_TO_CLOSE",
       "name":"Breaker Ready to Close",
       "enabled":false,
       "loggingType":"ON_CHANGE_INTERVAL",
@@ -196,9 +196,9 @@
       "simplifyType":"NONE",
       "chartColour":"",
       "data":null,
-      "dataSourceXid":"DS_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
+      "dataSourceXid":"DS_{{site}}_{{dataHall}}_{{device}}",
       "defaultCacheSize":1,
-      "deviceName":"{{deviceName}}",
+      "deviceName":"{{device}}",
       "discardExtremeValues":false,
       "discardHighLimit":1.7976931348623157E308,
       "discardLowLimit":-1.7976931348623157E308,
@@ -215,7 +215,7 @@
       "purgePeriod":1,
       "readPermission":[
         [
-          "ROLE_SITE_{{siteName}}"
+          "ROLE_SITE_{{site}}"
         ],
         [
           "ROLE_MANAGER"
@@ -224,7 +224,7 @@
           "ROLE_ADMIN"
         ],
         [
-          "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+          "ROLE_DATAH_{{site}}_{{dataHall}}"
         ]
       ],
       "setExtremeHighLimit":1.7976931348623157E308,
@@ -236,9 +236,9 @@
       ],
       "tags":{
         "deviceType":"BRK-SE-MASTERPACK",
-        "site":"{{siteName}}",
-        "deviceID":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-        "dataHall":"{{dataHallName}}"
+        "site":"{{site}}",
+        "deviceID":"{{site}}_{{dataHall}}_{{device}}",
+        "dataHall":"{{dataHall}}"
       },
       "textRenderer":{
         "type":"BINARY",
@@ -250,7 +250,7 @@
       "tolerance":0.0
     },
     {
-      "xid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_CIRCUIT_BREAKER_STATUS",
+      "xid":"DP_{{site}}_{{dataHall}}_{{device}}_CIRCUIT_BREAKER_STATUS",
       "name":"Circuit Breaker Status",
       "enabled":false,
       "loggingType":"ON_CHANGE_INTERVAL",
@@ -279,9 +279,9 @@
       "simplifyType":"NONE",
       "chartColour":"",
       "data":null,
-      "dataSourceXid":"DS_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
+      "dataSourceXid":"DS_{{site}}_{{dataHall}}_{{device}}",
       "defaultCacheSize":1,
-      "deviceName":"{{deviceName}}",
+      "deviceName":"{{device}}",
       "discardExtremeValues":false,
       "discardHighLimit":1.7976931348623157E308,
       "discardLowLimit":-1.7976931348623157E308,
@@ -298,7 +298,7 @@
       "purgePeriod":1,
       "readPermission":[
         [
-          "ROLE_SITE_{{siteName}}"
+          "ROLE_SITE_{{site}}"
         ],
         [
           "ROLE_MANAGER"
@@ -307,7 +307,7 @@
           "ROLE_ADMIN"
         ],
         [
-          "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+          "ROLE_DATAH_{{site}}_{{dataHall}}"
         ]
       ],
       "setExtremeHighLimit":1.7976931348623157E308,
@@ -319,9 +319,9 @@
       ],
       "tags":{
         "deviceType":"BRK-SE-MASTERPACK",
-        "site":"{{siteName}}",
-        "deviceID":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-        "dataHall":"{{dataHallName}}"
+        "site":"{{site}}",
+        "deviceID":"{{site}}_{{dataHall}}_{{device}}",
+        "dataHall":"{{dataHall}}"
       },
       "textRenderer":{
         "type":"BINARY",
@@ -333,7 +333,7 @@
       "tolerance":0.0
     },
     {
-      "xid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_BREAKER_TRIPPED",
+      "xid":"DP_{{site}}_{{dataHall}}_{{device}}_BREAKER_TRIPPED",
       "name":"Breaker Tripped",
       "enabled":false,
       "loggingType":"ON_CHANGE_INTERVAL",
@@ -362,9 +362,9 @@
       "simplifyType":"NONE",
       "chartColour":"",
       "data":null,
-      "dataSourceXid":"DS_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
+      "dataSourceXid":"DS_{{site}}_{{dataHall}}_{{device}}",
       "defaultCacheSize":1,
-      "deviceName":"{{deviceName}}",
+      "deviceName":"{{device}}",
       "discardExtremeValues":false,
       "discardHighLimit":1.7976931348623157E308,
       "discardLowLimit":-1.7976931348623157E308,
@@ -381,7 +381,7 @@
       "purgePeriod":1,
       "readPermission":[
         [
-          "ROLE_SITE_{{siteName}}"
+          "ROLE_SITE_{{site}}"
         ],
         [
           "ROLE_MANAGER"
@@ -390,7 +390,7 @@
           "ROLE_ADMIN"
         ],
         [
-          "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+          "ROLE_DATAH_{{site}}_{{dataHall}}"
         ]
       ],
       "setExtremeHighLimit":1.7976931348623157E308,
@@ -402,9 +402,9 @@
       ],
       "tags":{
         "deviceType":"BRK-SE-MASTERPACK",
-        "site":"{{siteName}}",
-        "deviceID":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-        "dataHall":"{{dataHallName}}"
+        "site":"{{site}}",
+        "deviceID":"{{site}}_{{dataHall}}_{{device}}",
+        "dataHall":"{{dataHall}}"
       },
       "textRenderer":{
         "type":"BINARY",
@@ -416,7 +416,7 @@
       "tolerance":0.0
     },
     {
-      "xid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_TEST_POSITION",
+      "xid":"DP_{{site}}_{{dataHall}}_{{device}}_TEST_POSITION",
       "name":"Test Position",
       "enabled":false,
       "loggingType":"ON_CHANGE_INTERVAL",
@@ -445,9 +445,9 @@
       "simplifyType":"NONE",
       "chartColour":"",
       "data":null,
-      "dataSourceXid":"DS_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
+      "dataSourceXid":"DS_{{site}}_{{dataHall}}_{{device}}",
       "defaultCacheSize":1,
-      "deviceName":"{{deviceName}}",
+      "deviceName":"{{device}}",
       "discardExtremeValues":false,
       "discardHighLimit":1.7976931348623157E308,
       "discardLowLimit":-1.7976931348623157E308,
@@ -464,7 +464,7 @@
       "purgePeriod":1,
       "readPermission":[
         [
-          "ROLE_SITE_{{siteName}}"
+          "ROLE_SITE_{{site}}"
         ],
         [
           "ROLE_MANAGER"
@@ -473,7 +473,7 @@
           "ROLE_ADMIN"
         ],
         [
-          "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+          "ROLE_DATAH_{{site}}_{{dataHall}}"
         ]
       ],
       "setExtremeHighLimit":1.7976931348623157E308,
@@ -485,9 +485,9 @@
       ],
       "tags":{
         "deviceType":"BRK-SE-MASTERPACK",
-        "site":"{{siteName}}",
-        "deviceID":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-        "dataHall":"{{dataHallName}}"
+        "site":"{{site}}",
+        "deviceID":"{{site}}_{{dataHall}}_{{device}}",
+        "dataHall":"{{dataHall}}"
       },
       "textRenderer":{
         "type":"BINARY",
@@ -499,7 +499,7 @@
       "tolerance":0.0
     },
     {
-      "xid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_CURRENT_A",
+      "xid":"DP_{{site}}_{{dataHall}}_{{device}}_CURRENT_A",
       "name":"Current A",
       "enabled":false,
       "loggingType":"ON_CHANGE_INTERVAL",
@@ -528,9 +528,9 @@
       "simplifyType":"NONE",
       "chartColour":"",
       "data":null,
-      "dataSourceXid":"DS_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
+      "dataSourceXid":"DS_{{site}}_{{dataHall}}_{{device}}",
       "defaultCacheSize":1,
-      "deviceName":"{{deviceName}}",
+      "deviceName":"{{device}}",
       "discardExtremeValues":false,
       "discardHighLimit":1.7976931348623157E308,
       "discardLowLimit":-1.7976931348623157E308,
@@ -547,7 +547,7 @@
       "purgePeriod":1,
       "readPermission":[
         [
-          "ROLE_SITE_{{siteName}}"
+          "ROLE_SITE_{{site}}"
         ],
         [
           "ROLE_MANAGER"
@@ -556,7 +556,7 @@
           "ROLE_ADMIN"
         ],
         [
-          "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+          "ROLE_DATAH_{{site}}_{{dataHall}}"
         ]
       ],
       "setExtremeHighLimit":1.7976931348623157E308,
@@ -568,10 +568,10 @@
       ],
       "tags":{
         "deviceType":"BRK-SE-MASTERPACK",
-        "site":"{{siteName}}",
+        "site":"{{site}}",
         "trend":"TRUE",
-        "deviceID":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-        "dataHall":"{{dataHallName}}"
+        "deviceID":"{{site}}_{{dataHall}}_{{device}}",
+        "dataHall":"{{dataHall}}"
       },
       "textRenderer":{
         "type":"ANALOG",
@@ -581,7 +581,7 @@
       "tolerance":0.0
     },
     {
-      "xid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_CURRENT_B",
+      "xid":"DP_{{site}}_{{dataHall}}_{{device}}_CURRENT_B",
       "name":"Current B",
       "enabled":false,
       "loggingType":"ON_CHANGE_INTERVAL",
@@ -610,9 +610,9 @@
       "simplifyType":"NONE",
       "chartColour":"",
       "data":null,
-      "dataSourceXid":"DS_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
+      "dataSourceXid":"DS_{{site}}_{{dataHall}}_{{device}}",
       "defaultCacheSize":1,
-      "deviceName":"{{deviceName}}",
+      "deviceName":"{{device}}",
       "discardExtremeValues":false,
       "discardHighLimit":1.7976931348623157E308,
       "discardLowLimit":-1.7976931348623157E308,
@@ -629,7 +629,7 @@
       "purgePeriod":1,
       "readPermission":[
         [
-          "ROLE_SITE_{{siteName}}"
+          "ROLE_SITE_{{site}}"
         ],
         [
           "ROLE_MANAGER"
@@ -638,7 +638,7 @@
           "ROLE_ADMIN"
         ],
         [
-          "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+          "ROLE_DATAH_{{site}}_{{dataHall}}"
         ]
       ],
       "setExtremeHighLimit":1.7976931348623157E308,
@@ -650,10 +650,10 @@
       ],
       "tags":{
         "deviceType":"BRK-SE-MASTERPACK",
-        "site":"{{siteName}}",
+        "site":"{{site}}",
         "trend":"TRUE",
-        "deviceID":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-        "dataHall":"{{dataHallName}}"
+        "deviceID":"{{site}}_{{dataHall}}_{{device}}",
+        "dataHall":"{{dataHall}}"
       },
       "textRenderer":{
         "type":"ANALOG",
@@ -663,7 +663,7 @@
       "tolerance":0.0
     },
     {
-      "xid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_CURRENT_C",
+      "xid":"DP_{{site}}_{{dataHall}}_{{device}}_CURRENT_C",
       "name":"Current C",
       "enabled":false,
       "loggingType":"ON_CHANGE_INTERVAL",
@@ -692,9 +692,9 @@
       "simplifyType":"NONE",
       "chartColour":"",
       "data":null,
-      "dataSourceXid":"DS_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
+      "dataSourceXid":"DS_{{site}}_{{dataHall}}_{{device}}",
       "defaultCacheSize":1,
-      "deviceName":"{{deviceName}}",
+      "deviceName":"{{device}}",
       "discardExtremeValues":false,
       "discardHighLimit":1.7976931348623157E308,
       "discardLowLimit":-1.7976931348623157E308,
@@ -711,7 +711,7 @@
       "purgePeriod":1,
       "readPermission":[
         [
-          "ROLE_SITE_{{siteName}}"
+          "ROLE_SITE_{{site}}"
         ],
         [
           "ROLE_MANAGER"
@@ -720,7 +720,7 @@
           "ROLE_ADMIN"
         ],
         [
-          "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+          "ROLE_DATAH_{{site}}_{{dataHall}}"
         ]
       ],
       "setExtremeHighLimit":1.7976931348623157E308,
@@ -732,10 +732,10 @@
       ],
       "tags":{
         "deviceType":"BRK-SE-MASTERPACK",
-        "site":"{{siteName}}",
+        "site":"{{site}}",
         "trend":"TRUE",
-        "deviceID":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-        "dataHall":"{{dataHallName}}"
+        "deviceID":"{{site}}_{{dataHall}}_{{device}}",
+        "dataHall":"{{dataHall}}"
       },
       "textRenderer":{
         "type":"ANALOG",
@@ -745,7 +745,7 @@
       "tolerance":0.0
     },
 	{
-      "xid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_ALARM_BREAKER_TRIPPED_CRITICAL",
+      "xid":"DP_{{site}}_{{dataHall}}_{{device}}_ALARM_BREAKER_TRIPPED_CRITICAL",
       "name":"Breaker Tripped Alarm",
       "enabled":false,
       "loggingType":"ON_CHANGE_INTERVAL",
@@ -759,7 +759,7 @@
         "context":[
           {
             "varName":"status",
-            "dataPointXid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_BREAKER_TRIPPED",
+            "dataPointXid":"DP_{{site}}_{{dataHall}}_{{device}}_BREAKER_TRIPPED",
             "updateContext":true
           }
         ],
@@ -778,10 +778,10 @@
         {
           "type":"MULTISTATE_STATE",
           "sourceType":"DATA_POINT",
-          "xid":"ED_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_BREAKER_TRIPPED_CRITICAL_ALARM",
-          "name":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}} Breaker Tripped",
+          "xid":"ED_{{site}}_{{dataHall}}_{{device}}_BREAKER_TRIPPED_CRITICAL_ALARM",
+          "name":"{{site}}_{{dataHall}}_{{device}} Breaker Tripped",
           "alarmLevel":"CRITICAL",
-          "dataPointXid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_ALARM_BREAKER_TRIPPED_CRITICAL",
+          "dataPointXid":"DP_{{site}}_{{dataHall}}_{{device}}_ALARM_BREAKER_TRIPPED_CRITICAL",
           "durationType":"SECONDS",
           "duration":30,
           "inverted":false,
@@ -803,9 +803,9 @@
       "simplifyType":"NONE",
       "chartColour":"",
       "data":null,
-      "dataSourceXid":"DS_{{siteName}}_{{dataHallName}}_ALARMS",
+      "dataSourceXid":"DS_{{site}}_{{dataHall}}_ALARMS",
       "defaultCacheSize":1,
-      "deviceName":"{{siteName}}_{{dataHallName}}_ALARMS",
+      "deviceName":"{{site}}_{{dataHall}}_ALARMS",
       "discardExtremeValues":false,
       "discardHighLimit":1.7976931348623157E308,
       "discardLowLimit":-1.7976931348623157E308,
@@ -831,10 +831,10 @@
       ],
       "tags":{
         "deviceType":"BRK-SE-MASTERPACK",
-        "site":"{{siteName}}",
+        "site":"{{site}}",
         "alarm":"TRUE",
-        "deviceID":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-        "dataHall":"{{dataHallName}}"
+        "deviceID":"{{site}}_{{dataHall}}_{{device}}",
+        "dataHall":"{{dataHall}}"
       },
       "textRenderer":{
         "type":"MULTISTATE",
@@ -874,7 +874,7 @@
       "tolerance":0.0
     },
     {
-      "xid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_ALARM_BREAKER_OPEN_CRITICAL",
+      "xid":"DP_{{site}}_{{dataHall}}_{{device}}_ALARM_BREAKER_OPEN_CRITICAL",
       "name":"Breaker Open Alarm",
       "enabled":false,
       "loggingType":"ON_CHANGE_INTERVAL",
@@ -888,7 +888,7 @@
         "context":[
           {
             "varName":"status",
-            "dataPointXid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_CIRCUIT_BREAKER_STATUS",
+            "dataPointXid":"DP_{{site}}_{{dataHall}}_{{device}}_CIRCUIT_BREAKER_STATUS",
             "updateContext":true
           }
         ],
@@ -907,10 +907,10 @@
         {
           "type":"MULTISTATE_STATE",
           "sourceType":"DATA_POINT",
-          "xid":"ED_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_BREAKER_OPEN_CRITICAL_ALARM",
-          "name":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}} Breaker Open Critical Alarm",
+          "xid":"ED_{{site}}_{{dataHall}}_{{device}}_BREAKER_OPEN_CRITICAL_ALARM",
+          "name":"{{site}}_{{dataHall}}_{{device}} Breaker Open Critical Alarm",
           "alarmLevel":"CRITICAL",
-          "dataPointXid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_ALARM_BREAKER_OPEN_CRITICAL",
+          "dataPointXid":"DP_{{site}}_{{dataHall}}_{{device}}_ALARM_BREAKER_OPEN_CRITICAL",
           "durationType":"SECONDS",
           "duration":30,
           "inverted":false,
@@ -932,9 +932,9 @@
       "simplifyType":"NONE",
       "chartColour":"",
       "data":null,
-      "dataSourceXid":"DS_{{siteName}}_{{dataHallName}}_ALARMS",
+      "dataSourceXid":"DS_{{site}}_{{dataHall}}_ALARMS",
       "defaultCacheSize":1,
-      "deviceName":"{{siteName}}_{{dataHallName}}_ALARMS",
+      "deviceName":"{{site}}_{{dataHall}}_ALARMS",
       "discardExtremeValues":false,
       "discardHighLimit":1.7976931348623157E308,
       "discardLowLimit":-1.7976931348623157E308,
@@ -960,10 +960,10 @@
       ],
       "tags":{
         "deviceType":"BRK-SE-MASTERPACK",
-        "site":"{{siteName}}",
+        "site":"{{site}}",
         "alarm":"TRUE",
-        "deviceID":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-        "dataHall":"{{dataHallName}}"
+        "deviceID":"{{site}}_{{dataHall}}_{{device}}",
+        "dataHall":"{{dataHall}}"
       },
       "textRenderer":{
         "type":"MULTISTATE",
@@ -1003,7 +1003,7 @@
       "tolerance":0.0
     },
 	{
-      "xid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_ALARM_BREAKER_TRIPPED_CRITICAL",
+      "xid":"DP_{{site}}_{{dataHall}}_{{device}}_ALARM_BREAKER_TRIPPED_CRITICAL",
       "name":"Breaker Tripped Alarm",
       "enabled":true,
       "loggingType":"ON_CHANGE_INTERVAL",
@@ -1017,7 +1017,7 @@
         "context":[
           {
             "varName":"status",
-            "dataPointXid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_BREAKER_TRIPPED",
+            "dataPointXid":"DP_{{site}}_{{dataHall}}_{{device}}_BREAKER_TRIPPED",
             "updateContext":true
           }
         ],
@@ -1036,10 +1036,10 @@
         {
           "type":"MULTISTATE_STATE",
           "sourceType":"DATA_POINT",
-          "xid":"ED_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_BREAKER_TRIPPED_CRITICAL_ALARM",
-          "name":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}} Breaker Tripped",
+          "xid":"ED_{{site}}_{{dataHall}}_{{device}}_BREAKER_TRIPPED_CRITICAL_ALARM",
+          "name":"{{site}}_{{dataHall}}_{{device}} Breaker Tripped",
           "alarmLevel":"CRITICAL",
-          "dataPointXid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_ALARM_BREAKER_TRIPPED_CRITICAL",
+          "dataPointXid":"DP_{{site}}_{{dataHall}}_{{device}}_ALARM_BREAKER_TRIPPED_CRITICAL",
           "durationType":"SECONDS",
           "duration":30,
           "inverted":false,
@@ -1053,7 +1053,7 @@
           ],
           "readPermission":[
 			[
-			  "ROLE_SITE_{{siteName}}"
+			  "ROLE_SITE_{{site}}"
 			],
 			[
 			  "ROLE_MANAGER"
@@ -1062,7 +1062,7 @@
 			  "ROLE_ADMIN"
 			],
 			[
-			  "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+			  "ROLE_DATAH_{{site}}_{{dataHall}}"
 			]
 		  ]
         }
@@ -1073,9 +1073,9 @@
       "simplifyType":"NONE",
       "chartColour":"",
       "data":null,
-      "dataSourceXid":"DS_{{siteName}}_{{dataHallName}}_ALARMS",
+      "dataSourceXid":"DS_{{site}}_{{dataHall}}_ALARMS",
       "defaultCacheSize":1,
-      "deviceName":"{{siteName}}_{{dataHallName}}_ALARMS",
+      "deviceName":"{{site}}_{{dataHall}}_ALARMS",
       "discardExtremeValues":false,
       "discardHighLimit":1.7976931348623157E308,
       "discardLowLimit":-1.7976931348623157E308,
@@ -1092,7 +1092,7 @@
       "purgePeriod":1,
       "readPermission":[
         [
-          "ROLE_SITE_{{siteName}}"
+          "ROLE_SITE_{{site}}"
         ],
         [
           "ROLE_MANAGER"
@@ -1101,7 +1101,7 @@
           "ROLE_ADMIN"
         ],
         [
-          "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+          "ROLE_DATAH_{{site}}_{{dataHall}}"
         ]
       ],
       "setExtremeHighLimit":1.7976931348623157E308,
@@ -1113,10 +1113,10 @@
       ],
       "tags":{
         "deviceType":"BRK-SE-MASTERPACK",
-        "site":"{{siteName}}",
+        "site":"{{site}}",
         "alarm":"TRUE",
-        "deviceID":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-        "dataHall":"{{dataHallName}}"
+        "deviceID":"{{site}}_{{dataHall}}_{{device}}",
+        "dataHall":"{{dataHall}}"
       },
       "textRenderer":{
         "type":"MULTISTATE",
@@ -1156,7 +1156,7 @@
       "tolerance":0.0
     },
     {
-      "xid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_ALARM_BREAKER_OPEN_CRITICAL",
+      "xid":"DP_{{site}}_{{dataHall}}_{{device}}_ALARM_BREAKER_OPEN_CRITICAL",
       "name":"Breaker Open Alarm",
       "enabled":true,
       "loggingType":"ON_CHANGE_INTERVAL",
@@ -1170,7 +1170,7 @@
         "context":[
           {
             "varName":"status",
-            "dataPointXid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_CIRCUIT_BREAKER_STATUS",
+            "dataPointXid":"DP_{{site}}_{{dataHall}}_{{device}}_CIRCUIT_BREAKER_STATUS",
             "updateContext":true
           }
         ],
@@ -1189,10 +1189,10 @@
         {
           "type":"MULTISTATE_STATE",
           "sourceType":"DATA_POINT",
-          "xid":"ED_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_BREAKER_OPEN_CRITICAL_ALARM",
-          "name":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}} Breaker Open Critical Alarm",
+          "xid":"ED_{{site}}_{{dataHall}}_{{device}}_BREAKER_OPEN_CRITICAL_ALARM",
+          "name":"{{site}}_{{dataHall}}_{{device}} Breaker Open Critical Alarm",
           "alarmLevel":"CRITICAL",
-          "dataPointXid":"DP_{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}_ALARM_BREAKER_OPEN_CRITICAL",
+          "dataPointXid":"DP_{{site}}_{{dataHall}}_{{device}}_ALARM_BREAKER_OPEN_CRITICAL",
           "durationType":"SECONDS",
           "duration":30,
           "inverted":false,
@@ -1206,7 +1206,7 @@
           ],
           "readPermission":[
 			[
-			  "ROLE_SITE_{{siteName}}"
+			  "ROLE_SITE_{{site}}"
 			],
 			[
 			  "ROLE_MANAGER"
@@ -1215,7 +1215,7 @@
 			  "ROLE_ADMIN"
 			],
 			[
-			  "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+			  "ROLE_DATAH_{{site}}_{{dataHall}}"
 			]
 		  ]
         }
@@ -1226,9 +1226,9 @@
       "simplifyType":"NONE",
       "chartColour":"",
       "data":null,
-      "dataSourceXid":"DS_{{siteName}}_{{dataHallName}}_ALARMS",
+      "dataSourceXid":"DS_{{site}}_{{dataHall}}_ALARMS",
       "defaultCacheSize":1,
-      "deviceName":"{{siteName}}_{{dataHallName}}_ALARMS",
+      "deviceName":"{{site}}_{{dataHall}}_ALARMS",
       "discardExtremeValues":false,
       "discardHighLimit":1.7976931348623157E308,
       "discardLowLimit":-1.7976931348623157E308,
@@ -1245,7 +1245,7 @@
       "purgePeriod":1,
       "readPermission":[
         [
-          "ROLE_SITE_{{siteName}}"
+          "ROLE_SITE_{{site}}"
         ],
         [
           "ROLE_MANAGER"
@@ -1254,7 +1254,7 @@
           "ROLE_ADMIN"
         ],
         [
-          "ROLE_DATAH_{{siteName}}_{{dataHallName}}"
+          "ROLE_DATAH_{{site}}_{{dataHall}}"
         ]
       ],
       "setExtremeHighLimit":1.7976931348623157E308,
@@ -1266,10 +1266,10 @@
       ],
       "tags":{
         "deviceType":"BRK-SE-MASTERPACK",
-        "site":"{{siteName}}",
+        "site":"{{site}}",
         "alarm":"TRUE",
-        "deviceID":"{{siteName}}_{{dataHallName}}_{{powerCenterName}}_{{deviceName}}",
-        "dataHall":"{{dataHallName}}"
+        "deviceID":"{{site}}_{{dataHall}}_{{device}}",
+        "dataHall":"{{dataHall}}"
       },
       "textRenderer":{
         "type":"MULTISTATE",
@@ -1308,5 +1308,5 @@
       },
       "tolerance":0.0
     }
-{{/devices}}{{/powerCenters}}{{/dataHalls}}{{/sites}}
+{{/devices}}{{/dataHalls}}{{/sites}}
 ]

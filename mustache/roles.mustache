@@ -11,15 +11,15 @@
   },
   {{#sites}}
     {
-      "xid": "ROLE_SITE_{{siteName}}",
+      "xid": "ROLE_SITE_{{site}}",
       "inherited": [],
-      "name": "Role for {{siteName}}"
+      "name": "Role for {{site}}"
     },
     {{#dataHalls}}
       {
-      "xid": "ROLE_DATAH_{{siteName}}_{{dataHallName}}",
+      "xid": "ROLE_DATAH_{{site}}_{{dataHall}}",
       "inherited": [],
-      "name": "Role for site {{siteName}}, hall {{dataHallName}}"
+      "name": "Role for site {{site}}, hall {{dataHall}}"
       },
     {{/dataHalls}}
   {{/sites}}
