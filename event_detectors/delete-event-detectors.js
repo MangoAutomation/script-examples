@@ -1,16 +1,18 @@
-/*Delete a group of even detectors
-The delete-event-detectors.js script could require a CSV file be present in the filestore 
-named event-detectors-to-delete.csv with the following structure: 
-eventDetectorId, eventDetectorXid, any, other, column, can, be, present, but, will, be, ignored
-
-This script will:
-    1. Locate the event detector that matches the xid provided
-    2. Confirm the id is also a match (always double-verify before deleting things)
-    3. Delete the event detector
-
-    */
-
-//User configurable variables:
+/** Delete a group of even detectors
+ * The delete-event-detectors.js script could require a CSV file be present in the filestore 
+ * named event-detectors-to-delete.csv with the following structure: 
+ * eventDetectorId, eventDetectorXid, any, other, column, can, be, present, but, will, be, ignored
+ * 
+ * This script will:
+ *     1. Locate the event detector that matches the xid provided
+ *     2. Confirm the id is also a match (always double-verify before deleting things)
+ *     3. Delete the event detector
+ * 
+ * User configurable variable:
+ *  Set enableConsoleLog = true, to eneble verbose logging
+ *  Set enableConsoleLog = false, to disable verbose logging
+ *  Verbose logging may impact the perdormance if the script is updating a large number of event detectors
+ */
 const enableConsoleLog = true;
 const fileName = 'event-detectors-to-delete.csv';
 const fileStorePath = 'default';
@@ -37,7 +39,7 @@ function readCsv(fileStore, filePath) {
 
     //Get the data
     for (let i = 0; i < lines.length; i++) {
-        const row = lines[i].replace(/["']/g, "").split(',');
+        const row = lines[i].replace(/["']/g, "").replace(/\s+/g, "").split(',');
         const data = lines[i] = {};
         for (let j = 0; j < row.length; j++) {
             data[header[j]] = row[j];
@@ -65,11 +67,11 @@ const eventDetectorsArray = readCsv(fileStorePath, fileName);
 console.log(`Deleting ${eventDetectorsArray.length} event detectors`);
 let count = 0;
 let failed = 0;
-for (const eventDetector of eventDetectorsArray) {
+for (const eventDetectorCsv of eventDetectorsArray) {
 
     //validations
     try {
-        for (const [key, value] of Object.entries(eventDetector)) {
+        for (const [key, value] of Object.entries(eventDetectorCsv)) {
             if (mainHeaders.includes(key)) {
                 assureNotEmpty(key, value);
             }
@@ -84,21 +86,21 @@ for (const eventDetector of eventDetectorsArray) {
 
     let detector;
     try {
-        detector = eventDetectorsService.get(eventDetector.eventDetectorXid);
+        detector = eventDetectorsService.get(eventDetectorCsv.eventDetectorXid);
     } catch (e) {
-        log.error('Failed deleting the event detector with XId {} NOT FOUND!', eventDetector.eventDetectorXid);
-        verbose(`'Failed deleting the event detector with XId ${eventDetector.eventDetectorXid} NOT FOUND!'`);
+        log.error('Failed deleting the event detector with XId {} NOT FOUND!', eventDetectorCsv.eventDetectorXid);
+        verbose(`'Failed deleting the event detector with XId ${eventDetectorCsv.eventDetectorXid} NOT FOUND!'`);
         failed++;
         continue;
     }
 
     try {
-        compare(detector.getId(), eventDetector.eventDetectorId, "eventDetectorId MISMATCH");
+        compare(detector.getId(), eventDetectorCsv.eventDetectorId, "eventDetectorId MISMATCH");
         verbose(`Deleting event detector ${detector.getName()} with id: ${detector.getId()}`);
         eventDetectorsService.delete(detector);
         count++;
     } catch (e) {
-        log.error('Failed deleting the event detector with XId {} because: {}', eventDetector.eventDetectorXid, e.message);
+        log.error('Failed deleting the event detector with XId {} because: {}', eventDetectorCsv.eventDetectorXid, e.message);
         verbose(`Failed deleting event detector ${e.message}`);
         failed++;
     }

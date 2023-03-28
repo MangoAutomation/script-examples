@@ -12,14 +12,21 @@
  *      Fail on a mismatch
  *      Fail if some other type of detector that is not supported
  *  3. Create the new event detector
- *  4. Set the detectorType DetectorName, Limit, and/or AlarmLevel values as needed    
-       If any of the new* columns are empty, that value should be left unchanged
-    5. Insert the event detector. 
-
+ *  4. Set the detectorType DetectorName, Limit, and/or AlarmLevel values as needed
+ *      If any of the new* columns are empty, that value should be left unchanged
+ *  5. Insert the event detector. 
+ * 
+ * 
+ *  
+ * User configurable variable:
+ *  Set enableConsoleLog = true, to eneble verbose logging
+ *  Set enableConsoleLog = false, to disable verbose logging
+ *  Verbose logging may impact the perdormance if the script is updating a large number of event detectors
  */
-
-//User configurable variables:
 const enableConsoleLog = true;
+
+
+
 const fileName = 'event-detectors-to-create.csv';
 const fileStorePath = 'default';
 
@@ -92,12 +99,12 @@ const emptyMessage = "[]";
 console.log(`Creating ${eventDetectorsArray.length} event detectors`);
 let count = 0;
 let failed = 0;
-for (const eventDetector of eventDetectorsArray) {
+for (const eventDetectorCsv of eventDetectorsArray) {
 
     let insertED = false;
     //Validations
     try {
-        for (const [key, value] of Object.entries(eventDetector)) {
+        for (const [key, value] of Object.entries(eventDetectorCsv)) {
             if (mainHeaders.includes(key)) {
                 assureNotEmpty(key, value);
             }
@@ -111,7 +118,7 @@ for (const eventDetector of eventDetectorsArray) {
     }
 
     try {
-        isTypeSupported(eventDetector.detectorType);
+        isTypeSupported(eventDetectorCsv.detectorType);
         verbose(`VALIDATED:`);
     } catch (e) {
         log.error('Will not create new Event Detector. Failed validation: {}', e.message);
@@ -121,7 +128,7 @@ for (const eventDetector of eventDetectorsArray) {
     }
     let validAlarmLevel;
     try {
-        validAlarmLevel = AlarmLevels.fromName(eventDetector.alarmLevel);
+        validAlarmLevel = AlarmLevels.fromName(eventDetectorCsv.alarmLevel);
     } catch (typeError) {
         log.error('AlarmLevel validation failed Reason:{}', typeError);
         verbose(`AlarmLevel validation failed Reason: ${typeError}`);
@@ -135,8 +142,8 @@ for (const eventDetector of eventDetectorsArray) {
     let point;
     try {
 
-        point = dataPointService.get(eventDetector.dataPointXid);
-        const definition = ModuleRegistry.getEventDetectorDefinition(eventDetector.detectorType);
+        point = dataPointService.get(eventDetectorCsv.dataPointXid);
+        const definition = ModuleRegistry.getEventDetectorDefinition(eventDetectorCsv.detectorType);
         detector = definition.baseCreateEventDetectorVO(point);
         detector.setXid(eventDetectorXid);
     } catch (e) {
@@ -147,11 +154,11 @@ for (const eventDetector of eventDetectorsArray) {
     }
 
     //set name
-    detector.setName(eventDetector.detectorName);
+    detector.setName(eventDetectorCsv.detectorName);
     verbose(`Detector Name: ${detector.getName()}`);
 
     //set limit
-    detector.setLimit(Number.parseFloat(eventDetector.limit));
+    detector.setLimit(Number.parseFloat(eventDetectorCsv.limit));
     verbose(`Detector new limit: ${detector.getLimit()}`);
 
     //set AlarmLevel
@@ -188,7 +195,7 @@ console.log(`Finished creating ${count} out of ${eventDetectorsArray.length} eve
 
 /**
  Example to create the CSV file from an SQL query
- SELECT dP.id as dataPointId, dP.xid as dataPointXid, 
+SELECT dP.id as dataPointId, dP.xid as dataPointXid, 
     '' as detectorType, '' as detectorName, 
     '' as `limit`, '' as alarmLevel, 
     dP.name as dataPointName, dS.id as dataSourceId,
@@ -198,13 +205,12 @@ INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
 INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
 WHERE
     (
-        dS.id IN (63, 65, 69)
-        OR
-        dS.xid IN ('internal_mango_monitoring_ds')
+        dS.xid IN ('DS_b3dfc7fa-416e-4650-b8de-b521ce288275')
     )
 AND
     (
-        dP.name LIKE 'JVM%'
-    );
+        dP.name LIKE 'onOffAlarmPoint%'
+    )
+	
  */
 
