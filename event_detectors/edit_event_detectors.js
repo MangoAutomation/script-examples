@@ -18,9 +18,9 @@
  * 
  *   
  * User configurable variable:
- *  Set enableConsoleLog = true, to eneble verbose logging
+ *  Set enableConsoleLog = true, to enable verbose logging
  *  Set enableConsoleLog = false, to disable verbose logging
- *  Verbose logging may impact the perdormance if the script is updating a large number of event detectors
+ *  Verbose logging may impact the performance if the script is updating a large number of event detectors
  */
 const enableConsoleLog = true;
 
@@ -35,7 +35,7 @@ mainHeaders.push("eventDetectorId", "eventDetectorXid", "detectorType", "newDete
 
 const compare = (actual, expected, message) => {
     if (actual === expected) return
-    else throw new Error(`${message}: ${actual} is NOT equal to ${expected}!`)
+    else throw new Error(`${message}: \"${actual}\" is NOT equal to \"${expected}\"!`)
 }
 
 function readCsv(fileStore, filePath) {

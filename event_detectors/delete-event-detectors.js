@@ -9,9 +9,9 @@
  *     3. Delete the event detector
  * 
  * User configurable variable:
- *  Set enableConsoleLog = true, to eneble verbose logging
+ *  Set enableConsoleLog = true, to enable verbose logging
  *  Set enableConsoleLog = false, to disable verbose logging
- *  Verbose logging may impact the perdormance if the script is updating a large number of event detectors
+ *  Verbose logging may impact the performance if the script is updating a large number of event detectors
  */
 const enableConsoleLog = true;
 const fileName = 'event-detectors-to-delete.csv';
