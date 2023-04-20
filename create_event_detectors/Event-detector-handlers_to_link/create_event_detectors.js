@@ -1,5 +1,5 @@
 /**
- * Create a group of even detectors
+ * Create a group of event detectors
  * The create_event_detectors.js script requires a CSV file to be present in the filestore 
  * named event-detectors-to-create.csv with the following structure: 
  * dataPointId,dataPointXid,detectorType,detectorName,limit,alarmLevel,dataPointName, any, other, column, can, be, present, but, will, be, ignored
@@ -26,6 +26,9 @@
  */
 const enableConsoleLog = true;
 const handlersLinkDelimiter = ';'
+if (handlersLinkDelimiter === ',') {
+    throw new Error(INVALID DELIMITER. Please use a different character as a delimiter in the event handler columns.);
+}
 
 const fileName = 'event-detectors-to-create.csv';
 const fileStorePath = 'default';
