@@ -25,9 +25,6 @@
  */
 const enableConsoleLog = true;
 const handlersLinkDelimiter = ';'
-if (handlersLinkDelimiter === ',') {
-    throw new Error(INVALID DELIMITER. Please use a different character as a delimiter in the event handler columns.);
-}
 
 const fileName = 'event-detectors-to-edit.csv';
 const fileStorePath = 'default';
@@ -89,7 +86,7 @@ const verbose = (logMessage) => {
 }
 
 const eventDetectorsService = services.eventDetectorsService;
-const eventDetectorsArray = readCsv(fileStorePath, fileName);
+const eventDetectorsArray = handlersLinkDelimiter === ',' ? [] : readCsv(fileStorePath, fileName);
 const emptyMessage = "[]";
 
 console.log(`Editing ${eventDetectorsArray.length} event detectors`);
@@ -243,6 +240,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
             filteredEventHandlers.forEach(xid => {
                 verbose(`WARNING event handler << ${xid} >> was not linked to the event detector`);
                 log.error(`WARNING event handler << ${xid} >> was not linked to the event detector`);
+                failed++;
             })
 
         }
@@ -269,8 +267,8 @@ for (const eventDetectorCsv of eventDetectorsArray) {
         verbose(`Edited ${count} event detectors out of ${eventDetectorsArray.length}`);
     }
 }
-console.log(`Finished editing ${count} out of ${eventDetectorsArray.length} event detectors with ${failed} errors`);
-
+const message = handlersLinkDelimiter === ',' ? `INVALID DELIMITER. Please use a different character as a delimiter in the event handler columns.` : `Finished editing ${count} out of ${eventDetectorsArray.length} event detectors with ${failed} errors`
+console.log(message);
 /*
   SELECT DISTINCT eD.id as eventDetectorId, eD.xid as eventDetectorXid, eD.typeName as detectorType,
     '' as newDetectorName, '' as newLimit,'' as newAlarmLevel, 

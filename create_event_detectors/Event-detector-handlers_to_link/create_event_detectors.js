@@ -26,9 +26,6 @@
  */
 const enableConsoleLog = true;
 const handlersLinkDelimiter = ';'
-if (handlersLinkDelimiter === ',') {
-    throw new Error(INVALID DELIMITER. Please use a different character as a delimiter in the event handler columns.);
-}
 
 const fileName = 'event-detectors-to-create.csv';
 const fileStorePath = 'default';
@@ -97,7 +94,7 @@ const verbose = (logMessage) => {
 }
 
 const eventDetectorsService = services.eventDetectorsService;
-const eventDetectorsArray = readCsv(fileStorePath, fileName);
+const eventDetectorsArray = handlersLinkDelimiter === ',' ? [] : readCsv(fileStorePath, fileName);
 const emptyMessage = "[]";
 
 console.log(`Creating ${eventDetectorsArray.length} event detectors`);
@@ -223,8 +220,8 @@ for (const eventDetectorCsv of eventDetectorsArray) {
         }
     }
 }
-console.log(`Finished creating ${count} out of ${eventDetectorsArray.length} event detectors with ${failed} errors`);
-
+const message = handlersLinkDelimiter === ',' ? `INVALID DELIMITER. Please use a different character as a delimiter in the event handler columns.` : `Finished editing ${count} out of ${eventDetectorsArray.length} event detectors with ${failed} errors`
+console.log(message);
 /*
 SELECT DISTINCT dP.id as dataPointId, dP.xid as dataPointXid, 
     '' as detectorType, '' as detectorName, 
