@@ -1,6 +1,6 @@
 # Event detector scripts user guide.
 
-This document explains how to use the scripts used to create, edit, and delete event detectors in bulk.
+This document explains how to create, edit, and delete event detectors in bulk using these scripts.
 
 # Contents
 
@@ -22,7 +22,7 @@ This document explains how to use the scripts used to create, edit, and delete e
 
 # Prerequisites 
 
-For each script to work a comma separated values (\*.csv) file is required to be present in the Mango file stores as well as the script. The csv input files are created by running an SQL query and then manually edited by the user to set the required information to execute the script.
+For each script to work, a comma separated values (*.csv) file is required in the Mango file store, as well as the script. The csv input files are created by running an SQL query and then manually edited by the user to set the required information.
 
 # General usage steps 
 
@@ -53,7 +53,7 @@ Set enableConsoleLog = false, to disable verbose logging
 
 # CREATE event detectors script
 
-Used to create a group of even detectors. The create\_event\_detectors.js script requires a CSV file to be present in the file stores named event-detectors-to-create.csv with the following structure:
+Used to create a group of even detectors. The create\_event\_detectors.js script requires a CSV file to be present in the file store named event-detectors-to-create.csv with the following structure:
 
 **dataPointId, dataPointXid, detectorType, detectorName, limit, alarmLevel,**** dataPointName **,** handlers\_to\_link,** any, other, column, can, be, present, but will, be, ignored
 
@@ -85,7 +85,7 @@ This script will:
 
 The goal of the SQL query is obtaining a prefilled CSV file ready to be edited by the user.
 
-The query requires the user to know at least the name of the Data source and data point (or part of it) and put that after the WHERE clause to narrow the query. DO NOT modify the query in the lines before the WHERE clause.
+DO NOT modify the query in the lines before the WHERE clause. However, the lines after the WHERE clause can be updated as needed to limit the query based on specific Data Sources, Data Points, or some combination of the two. Additional WHERE clauses can be added as needed.
 
       SELECT DISTINCT dP.id as dataPointId, dP.xid as dataPointXid, 
           '' as detectorType, '' as detectorName, 
@@ -142,6 +142,8 @@ NOTE: "EMPTY" is not a valid name for an event detector using this script
 
 The goal of the SQL query is obtaining a prefilled CSV file ready to be edited by the user.
 
+DO NOT modify the query in the lines before the WHERE clause. However, the lines after the WHERE clause can be updated as needed to limit the query based on specific Data Sources, Data Points, Event Detector types, Event Detector names, or some combination of these. Additional WHERE clauses can be added as needed.
+
     SELECT DISTINCT eD.id as eventDetectorId, eD.xid as eventDetectorXid, eD.typeName as detectorType,
     '' as newDetectorName, '' as newLimit,'' as newAlarmLevel, 
      '' as handlers_to_link, '' as handlers_to_remove,eD.data->>'$.name' as detectorName,
@@ -177,7 +179,6 @@ The goal of the SQL query is obtaining a prefilled CSV file ready to be edited b
             dP.name LIKE 'weatherAlert%'
         )
 
-The query requires the user to know at least the name of the Data source and data point (of part of it) and put that after the WHERE clause to narrow the query. DO NOT modify the query in the lines before the WHERE clause. !
 
 # DELETE event detectors script. 
 
@@ -191,7 +192,7 @@ Used to edit a group of even detectors. The **delete\_event\_detectors.js** scri
 
 This script will:
 
-1. Get and Validate headers.
+1. Get and Validate column headers.
 2. Locate the event detector that matches the eventDetectorXid provided.
 3. Confirm the id is also a match (always double-verify before editing things)
 4. Delete the event detector.
@@ -200,9 +201,9 @@ This script will:
 
 The goal of the SQL query is obtaining a prefilled CSV file ready to be edited by the user.
 
-The query requires the user to know at least the name of the Data source and data point (of part of it) and put that after the WHERE clause to narrow the query. DO NOT modify the query in the lines before the WHERE clause.
+DO NOT modify the query in the lines before the WHERE clause. However, the lines after the WHERE clause can be updated as needed to limit the query based on specific Data Sources, Data Points, or some combination of the two. Additional WHERE clauses can be added as needed.
 
-    SELECT eD.id as eventDetectorId, eD.xid as eventDetectorXid,
+    SELECT DISTINCT eD.id as eventDetectorId, eD.xid as eventDetectorXid,
 
     dP.id as dataPointId, dP.xid as dataPointXid,
 
