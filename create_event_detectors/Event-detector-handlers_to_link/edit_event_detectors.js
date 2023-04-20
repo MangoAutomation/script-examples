@@ -1,4 +1,4 @@
-/** Edit a group of even detectors
+/** Edit a group of event detectors
  * The edit_event_detectors.js script requires a CSV file to be present in the filestore 
  * named event-detectors-to-edit.csv with the following structure: 
  * eventDetectorId, eventDetectorXid, detectorType, newDetectorName, newLimit, newAlarmLevel, any, other, column, can, be, present, but, will, be, ignored
@@ -25,7 +25,9 @@
  */
 const enableConsoleLog = true;
 const handlersLinkDelimiter = ';'
-
+if (handlersLinkDelimiter === ',') {
+    throw new Error(INVALID DELIMITER. Please use a different character as a delimiter in the event handler columns.);
+}
 
 const fileName = 'event-detectors-to-edit.csv';
 const fileStorePath = 'default';
