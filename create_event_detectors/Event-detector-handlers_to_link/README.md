@@ -4,27 +4,27 @@ This document explains how to use the scripts used to create, edit, and delete e
 
 # Contents
 
-[Prerequisites](#_Toc131086284)
+[Prerequisites]
 
-[General usage steps](#_Toc131086285)
+[General usage steps]
 
-[CREATE event detectors script](#_Toc131086286)
+[CREATE event detectors script]
 
-[Suggested SQL query to create the CSV file](#_Toc131086287)
+[Suggested SQL query to create the CSV file]
 
-[EDIT event detectors script](#_Toc131086288)
+[EDIT event detectors script]
 
-[Suggested SQL query to create the CSV file](#_Toc131086289)
+[Suggested SQL query to create the CSV file]
 
-[DELETE event detectors script](#_Toc131086290)
+[DELETE event detectors script]
 
-[Suggested SQL query to create the CSV file ](#_Toc131086291)
+[Suggested SQL query to create the CSV file ]
 
-# Prerequisites {#_Toc131086284}
+# Prerequisites 
 
 For each script to work a comma separated values (\*.csv) file is required to be present in the Mango file stores as well as the script. The csv input files are created by running an SQL query and then manually edited by the user to set the required information to execute the script.
 
-# General usage steps {#_Toc131086285}
+# General usage steps 
 
 1. Run the specific query in the SQL console (/ui/administeration/sql-console)
 2. Click the "Download CSV" icon.
@@ -51,7 +51,7 @@ Set enableConsoleLog = false, to disable verbose logging
 
 #
 
-# CREATE event detectors script {#_Toc131086286}
+# CREATE event detectors script
 
 Used to create a group of even detectors. The create\_event\_detectors.js script requires a CSV file to be present in the file stores named event-detectors-to-create.csv with the following structure:
 
@@ -81,7 +81,7 @@ This script will:
 7. Handlers\_to\_link has no event handler links please write EMPTY
 8. The delimiter const will be on top file, line 28 const handlersLinkDelimiter = ';'
 
-## Suggested SQL query to create the CSV file {#_Toc131086287}
+## Suggested SQL query to create the CSV file 
 
 The goal of the SQL query is obtaining a prefilled CSV file ready to be edited by the user.
 
@@ -105,7 +105,7 @@ The query requires the user to know at least the name of the Data source and dat
               dP.name LIKE 'onOffAlarmPoint%'
           )
 
-# EDIT event detectors script {#_Toc131086288}
+# EDIT event detectors script
 
 Used to edit a group of even detectors. The **edit\_event\_detectors.js** script requires a CSV file to be present in the file stores named **event-detectors-to-edit.csv** with the following structure:
 
@@ -138,7 +138,7 @@ This script will:
 
 NOTE: "EMPTY" is not a valid name for an event detector using this script
 
-## Suggested SQL query to create the CSV file {#_Toc131086289}
+## Suggested SQL query to create the CSV file 
 
 The goal of the SQL query is obtaining a prefilled CSV file ready to be edited by the user.
 
@@ -179,7 +179,7 @@ The goal of the SQL query is obtaining a prefilled CSV file ready to be edited b
 
 The query requires the user to know at least the name of the Data source and data point (of part of it) and put that after the WHERE clause to narrow the query. DO NOT modify the query in the lines before the WHERE clause. !
 
-# DELETE event detectors script. {#_Toc131086290}
+# DELETE event detectors script. 
 
 Used to edit a group of even detectors. The **delete\_event\_detectors.js** script requires a CSV file to be present in the file stores named **event-detectors-to-delete.csv** with the following structure:
 
@@ -196,7 +196,7 @@ This script will:
 3. Confirm the id is also a match (always double-verify before editing things)
 4. Delete the event detector.
 
-## Suggested SQL query to create the CSV file {#_Toc131086291}
+## Suggested SQL query to create the CSV file 
 
 The goal of the SQL query is obtaining a prefilled CSV file ready to be edited by the user.
 

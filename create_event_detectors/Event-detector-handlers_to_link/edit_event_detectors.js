@@ -187,7 +187,6 @@ for (const eventDetectorCsv of eventDetectorsArray) {
     //Validate handlers_to_link, handlers_to_remove
 
     let foundEventHandlers = [];
-    let hasEventHandlerLink = true;
     if (eventDetectorCsv.handlers_to_link !== "EMPTY") {
         const handlersLink = eventDetectorCsv.handlers_to_link.split(handlersLinkDelimiter);
         for (const xid of Array.from(handlersLink)) {
@@ -209,13 +208,12 @@ for (const eventDetectorCsv of eventDetectorsArray) {
             const result = Array.from(new Set([...eventHandlersXids, ...filteredEventHandlers]));
             if (filteredEventHandlers.length) {
                 detector.setEventHandlerXids(result);
-                // update = true;
-            } else { hasEventHandlerLink = false }
+               update = true;
+            } 
         }
     }
 
     //Validate handlers_to_remove
-    let hasEventHandlerLinkRemove = true;
     if (eventDetectorCsv.handlers_to_remove !== "EMPTY") {
         foundEventHandlers = [];
         const handlersLink = eventDetectorCsv.handlers_to_remove.split(handlersLinkDelimiter);
@@ -232,7 +230,6 @@ for (const eventDetectorCsv of eventDetectorsArray) {
 
         if (foundEventHandlers.length) {
             //Validate if handlers_to_remove bellow into event detector
-            let notFoundHandlerLinkArray = [];
             let eventHandlersXids = [];
             detector.getEventHandlerXids().forEach(element => eventHandlersXids.push(element));
             const filteredEventHandlersToRemove = eventHandlersXids.filter((element) => !foundEventHandlers.includes(element))
@@ -241,7 +238,6 @@ for (const eventDetectorCsv of eventDetectorsArray) {
                 const result = Array.from(new Set(filteredEventHandlersToRemove));
                 detector.setEventHandlerXids(filteredEventHandlersToRemove);
             }
-            hasEventHandlerLinkRemove = filteredEventHandlers.length
             filteredEventHandlers.forEach(xid => {
                 verbose(`WARNING event handler << ${xid} >> was not linked to the event detector`);
                 log.error(`WARNING event handler << ${xid} >> was not linked to the event detector`);
@@ -251,7 +247,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
 
     }
 
-    if (update && hasEventHandlerLink && hasEventHandlerLinkRemove) {
+    if ( update ) {
         try {
             eventDetectorsService.update(eventDetectorCsv.eventDetectorXid, detector);
             count++;
