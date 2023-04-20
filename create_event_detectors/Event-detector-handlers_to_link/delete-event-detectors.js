@@ -1,4 +1,4 @@
-/** Delete a group of even detectors
+/** Delete a group of event detectors
  * The delete-event-detectors.js script could require a CSV file be present in the filestore 
  * named event-detectors-to-delete.csv with the following structure: 
  * eventDetectorId, eventDetectorXid, any, other, column, can, be, present, but, will, be, ignored
