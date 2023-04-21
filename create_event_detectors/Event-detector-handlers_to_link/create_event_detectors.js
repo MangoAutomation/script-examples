@@ -221,3 +221,23 @@ for (const eventDetectorCsv of eventDetectorsArray) {
     }
 }
 console.log(`Finished creating ${count} out of ${eventDetectorsArray.length} event detectors with ${failed} errors`);
+
+/*
+SELECT DISTINCT dP.id as dataPointId, dP.xid as dataPointXid, 
+    '' as detectorType, '' as detectorName, 
+    '' as `limit`, '' as alarmLevel, 
+    dP.name as dataPointName, '' as handlers_to_link,
+    dS.id as dataSourceId, dS.xid as dataSourceXid,
+    dS.name as dataSourceName, dS.dataSourceType
+FROM eventDetectors eD
+INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
+INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
+WHERE
+    (
+        dS.xid IN ('DS_b3dfc7fa-416e-4650-b8de-b521ce288275')
+    )
+AND
+    (
+        dP.name LIKE 'onOffAlarmPoint%'
+    )
+*/

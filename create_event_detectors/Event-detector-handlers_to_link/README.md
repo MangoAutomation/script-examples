@@ -87,7 +87,7 @@ The goal of the SQL query is obtaining a prefilled CSV file ready to be edited b
 
 The query requires the user to know at least the name of the Data source and data point (or part of it) and put that after the WHERE clause to narrow the query. DO NOT modify the query in the lines before the WHERE clause.
 
-      SELECT dP.id as dataPointId, dP.xid as dataPointXid, 
+      SELECT DISTINCT dP.id as dataPointId, dP.xid as dataPointXid, 
           '' as detectorType, '' as detectorName, 
           '' as `limit`, '' as alarmLevel, 
           dP.name as dataPointName, '' as handlers_to_link,
@@ -142,7 +142,7 @@ NOTE: "EMPTY" is not a valid name for an event detector using this script
 
 The goal of the SQL query is obtaining a prefilled CSV file ready to be edited by the user.
 
-    SELECT eD.id as eventDetectorId, eD.xid as eventDetectorXid, eD.typeName as detectorType,
+    SELECT DISTINCT eD.id as eventDetectorId, eD.xid as eventDetectorXid, eD.typeName as detectorType,
     '' as newDetectorName, '' as newLimit,'' as newAlarmLevel, 
      '' as handlers_to_link, '' as handlers_to_remove,eD.data->>'$.name' as detectorName,
     eD.data->>'$.limit' as detectorLimit, eD.data->>'$.alarmLevel' as detectorAlarmLevel,
