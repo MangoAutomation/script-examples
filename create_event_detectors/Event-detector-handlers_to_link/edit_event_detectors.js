@@ -1,7 +1,8 @@
-/** Edit a group of event detectors
+/** Edit a group of even detectors
+ * Was Tested MANGO 4.5.x
  * The edit_event_detectors.js script requires a CSV file to be present in the filestore 
  * named event-detectors-to-edit.csv with the following structure: 
- * eventDetectorId, eventDetectorXid, detectorType, newDetectorName, newLimit, newAlarmLevel, any, other, column, can, be, present, but, will, be, ignored
+ * eventDetectorId, eventDetectorXid, detectorType, newDetectorName, newLimit, newAlarmLevel, newStateValues, newStateInverted, handlers_to_link, handlers_to_remove", dataPointType, any, other, column, can, be, present, but, will, be, ignored
  * 
  * This script will:
  *     1. Locate the event detector that matches the eventDetectorXid provided
@@ -9,6 +10,8 @@
  *     3. Confirm the detectorType is correct
  *        LOW_LIMIT
  *        HIGH_LIMIT
+ *        MULTISTATE_STATE
+ *        BINARY_STATE
  *        Fail on a mismatch
  *        Fail if some other type of detector that is not supported
  *     4. Set the new DetectorName, Limit, and/or AlarmLevel values as needed    
@@ -32,12 +35,9 @@ const RESERVED_EMPTY = "EMPTY";
 const Files = Java.type('java.nio.file.Files');
 const AlarmLevels = Java.type('com.serotonin.m2m2.rt.event.AlarmLevels');
 const eventHandlerService = services.eventHandlerService;
-//const eventHandlerDao = Java.type('com.serotonin.m2m2.db.dao.EventHandlerDao');
-//const processEventHandler = Java.type('com.serotonin.m2m2.vo.event.ProcessEventHandlerVO')
-
 
 const mainHeaders = [];
-mainHeaders.push("eventDetectorId", "eventDetectorXid", "detectorType", "newDetectorName", "newLimit", "newAlarmLevel", "handlers_to_link", "handlers_to_remove");
+mainHeaders.push("eventDetectorId", "eventDetectorXid", "detectorType", "newDetectorName", "newAlarmLevel", "newLimit", "newStateValues", "newStateInverted", "handlers_to_link", "handlers_to_remove", "dataPointType");
 
 const compare = (actual, expected, message) => {
     if (actual === expected) return
@@ -70,6 +70,8 @@ const isTypeSupported = (type) => {
     switch (type) {
         case "HIGH_LIMIT":
         case "LOW_LIMIT":
+        case "MULTISTATE_STATE":
+        case "BINARY_STATE":
             verbose(`${type}: supported`);
             return;
         default:
@@ -96,7 +98,6 @@ for (const eventDetectorCsv of eventDetectorsArray) {
     let detector;
     let update = false;
     //Validations
-
     verbose(eventDetectorCsv.eventDetectorXid);
     try {
         detector = eventDetectorsService.get(eventDetectorCsv.eventDetectorXid);
@@ -183,10 +184,9 @@ for (const eventDetectorCsv of eventDetectorsArray) {
         update = true;
 
     }
-    //Validate handlers_to_link, handlers_to_remove
 
     let foundEventHandlers = [];
-    if (eventDetectorCsv.handlers_to_link !== "EMPTY") {
+    if (!eventDetectorCsv.handlers_to_link || eventDetectorCsv.handlers_to_link !== RESERVED_EMPTY) {
         const handlersLink = eventDetectorCsv.handlers_to_link.split(handlersLinkDelimiter);
         for (const xid of Array.from(handlersLink)) {
             try {
@@ -200,20 +200,20 @@ for (const eventDetectorCsv of eventDetectorsArray) {
         }
         if (foundEventHandlers.length) {
             //Validate if handlers_to_link bellow into event detector
-            let foundHandlerLinkArray = [];
             let eventHandlersXids = [];
             detector.getEventHandlerXids().forEach(element => eventHandlersXids.push(element));
-            const filteredEventHandlers = foundEventHandlers.filter((element) => !eventHandlersXids.includes(element))
-            const result = Array.from(new Set([...eventHandlersXids, ...filteredEventHandlers]));
-            if (filteredEventHandlers.length) {
-                detector.setEventHandlerXids(result);
-               update = true;
-            } 
+
+            // Array with new linked event handlers
+            const newEventHandlers = foundEventHandlers.filter((element) => !eventHandlersXids.includes(element))
+            const result = Array.from(new Set([...eventHandlersXids, ...newEventHandlers]));
+            detector.setEventHandlerXids(result);
+            update = true;
+
         }
     }
 
     //Validate handlers_to_remove
-    if (eventDetectorCsv.handlers_to_remove !== "EMPTY") {
+    if (!eventDetectorCsv.handlers_to_remove || eventDetectorCsv.handlers_to_remove !== RESERVED_EMPTY) {
         foundEventHandlers = [];
         const handlersLink = eventDetectorCsv.handlers_to_remove.split(handlersLinkDelimiter);
         for (const xid of Array.from(handlersLink)) {
@@ -231,13 +231,16 @@ for (const eventDetectorCsv of eventDetectorsArray) {
             //Validate if handlers_to_remove bellow into event detector
             let eventHandlersXids = [];
             detector.getEventHandlerXids().forEach(element => eventHandlersXids.push(element));
-            const filteredEventHandlersToRemove = eventHandlersXids.filter((element) => !foundEventHandlers.includes(element))
-            const filteredEventHandlers = foundEventHandlers.filter((element) => !eventHandlersXids.includes(element))
-            if (filteredEventHandlersToRemove.length) {
-                const result = Array.from(new Set(filteredEventHandlersToRemove));
-                detector.setEventHandlerXids(filteredEventHandlersToRemove);
-            }
-            filteredEventHandlers.forEach(xid => {
+
+            // Array without event handler to be removed
+            const newEventHandlers = eventHandlersXids.filter((element) => !foundEventHandlers.includes(element))
+            //Array with no linked event handers
+            const noLinkedEventHandlers = foundEventHandlers.filter((element) => !eventHandlersXids.includes(element))
+            const result = Array.from(new Set(newEventHandlers));
+            detector.setEventHandlerXids(result);
+            update = true;
+
+            noLinkedEventHandlers.forEach(xid => {
                 verbose(`WARNING event handler << ${xid} >> was not linked to the event detector`);
                 log.error(`WARNING event handler << ${xid} >> was not linked to the event detector`);
                 failed++;
@@ -247,7 +250,48 @@ for (const eventDetectorCsv of eventDetectorsArray) {
 
     }
 
-    if ( update ) {
+    //Validate handlers_to_link, handlers_to_remove
+    if (eventDetectorCsv.dataPointType === 'MULTISTATE' || eventDetectorCsv.dataPointType === 'BINARY') {
+
+        if (!eventDetectorCsv.newStateValues || eventDetectorCsv.newStateValues === RESERVED_EMPTY) {
+            log.error(`Event detector ${eventDetectorCsv.newDetectorName} -> Empty state values ${eventDetectorCsv.dataPointType}`);
+            verbose(`Event detector ${eventDetectorCsv.newDetectorName} -> Empty state values ${eventDetectorCsv.dataPointType}`);
+            //console.log(`Event detector ${eventDetectorCsv.detectorName} -> Empty state values ${eventDetectorCsv.dataPointType}`)
+            failed++;
+        }
+        else {
+            if (eventDetectorCsv.dataPointType === 'MULTISTATE') {
+                //Set MultiState value
+                const stateValues = Array.from(eventDetectorCsv.newStateValues.split(handlersLinkDelimiter)).map(function (value) {
+                    return Number(value);
+                });
+                detector.setState(Number.parseInt([stateValues], 10));
+                if (['true', 'false'].includes(eventDetectorCsv.newStateInverted.toLowerCase())) {
+                    detector.setInverted(eventDetectorCsv.newStateInverted.toLowerCase() === 'true' || eventDetectorCsv.newStateInverted === '1');
+                } else {
+                    if (['empty', ''].includes(eventDetectorCsv.newStateInverted.toLowerCase())) {
+                        log.error(`Event detector ${eventDetectorCsv.newDetectorName} -> stateInverted is not allow ${eventDetectorCsv.newStateInverted}`);
+                        verbose(`Event detector ${eventDetectorCsv.newDetectorName} -> stateInverted is not allow ${eventDetectorCsv.newStateInverted}`);
+                        failed++;
+                    }
+                }
+                detector.setStates(stateValues.length === 1 ? null : stateValues)
+                update = true
+            } else if (eventDetectorCsv.dataPointType === 'BINARY' && ['true', 'false'].includes(eventDetectorCsv.newStateValues)) {
+                //Set Binary value
+                console.log('get state', detector.getState, '----', eventDetectorCsv.newStateValues.toLowerCase())
+                detector.setState(eventDetectorCsv.newStateValues.toLowerCase() === 'true' || eventDetectorCsv.newStateValues === '1')
+                update = true
+            } else {
+                log.error(`Event detector ${eventDetectorCsv.newDetectorName} -> Event detector type ${eventDetectorCsv.type} Not Supported for this dataPointType!`);
+                verbose(`Event detector ${eventDetectorCsv.newDetectorName} -> Event detector type ${eventDetectorCsv.type} Not Supported for this dataPointType!`);
+                failed++;
+            }
+        }
+    }
+
+
+    if (update) {
         try {
             eventDetectorsService.update(eventDetectorCsv.eventDetectorXid, detector);
             count++;
@@ -267,15 +311,27 @@ for (const eventDetectorCsv of eventDetectorsArray) {
         verbose(`Edited ${count} event detectors out of ${eventDetectorsArray.length}`);
     }
 }
+
 const message = handlersLinkDelimiter === ',' ? `INVALID DELIMITER. Please use a different character as a delimiter in the event handler columns.` : `Finished editing ${count} out of ${eventDetectorsArray.length} event detectors with ${failed} errors`
 console.log(message);
-/*
-  SELECT DISTINCT eD.id as eventDetectorId, eD.xid as eventDetectorXid, eD.typeName as detectorType,
-    '' as newDetectorName, '' as newLimit,'' as newAlarmLevel, 
-     '' as handlers_to_link, '' as handlers_to_remove,eD.data->>'$.name' as detectorName,
-    eD.data->>'$.limit' as detectorLimit, eD.data->>'$.alarmLevel' as detectorAlarmLevel,
-    eD.data->>'$.sourceType' as detectorSourceType,  dP.id as dataPointId,
-    dP.xid as dataPointXid, dS.id as dataSourceId, dS.xid as dataSourceXid,
+
+/**
+ Example to create the CSV file from an MySQL SQL query
+
+SELECT DISTINCT eD.id as eventDetectorId, eD.xid as eventDetectorXid, eD.typeName as detectorType,
+    '' as newDetectorName, '' as newAlarmLevel, '' as newLimit, '' as newStateValues,
+    '' as newStateInverted, '' as handlers_to_link, '' as handlers_to_remove,
+    eD.data->>'$.name' as existingName, eD.data->>'$.alarmLevel' as existingAlarmLevel,
+    eD.data->>'$.limit' as existingLimit,
+    CASE
+        WHEN eD.data->>'$.states' = 'null' THEN eD.data->>'$.state'
+        ELSE REPLACE(REPLACE(REPLACE(eD.data->>'$.states', '[', ''), ']', ''), ',', ';')
+    END as existingStateValues,
+    eD.data->>'$.inverted' as existingStateInverted, dP.name as dataPointName,
+    REPLACE(REPLACE(REPLACE(REPLACE(dP.dataTypeId, '1', 'BINARY'),
+       '2', 'MULTISTATE'), '3', 'NUMERIC'), '4',
+       'ALPHANUMERIC') as dataPointType, eD.data->>'$.sourceType' as detectorSourceType,
+    dP.id as dataPointId, dP.xid as dataPointXid, dS.id as dataSourceId, dS.xid as dataSourceXid,
     dS.name as dataSourceName, dS.dataSourceType
 FROM eventDetectors eD
 INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
@@ -291,18 +347,18 @@ AND
         dS.xid IN ('DS_b3dfc7fa-416e-4650-b8de-b521ce288275')
     )
 AND
-	(
-		eD.typeName IN ('HIGH_LIMIT', 'LOW_LIMIT')
-	)
+    (
+        eD.typeName IN ('HIGH_LIMIT', 'LOW_LIMIT', 'BINARY_STATE', 'MULTISTATE_STATE')
+    )
+AND
+    (
+        dP.name LIKE 'onOffAlarmPoint%'
+    )
 AND
     (
         eD.data->>'$.name' LIKE 'Weather%'
         OR
         eD.data->>'$.name' LIKE 'weather%'
     )
-AND
-    (
-        dP.name LIKE 'weatherAlert%'
-    )
- */ 
- 
+ */
+

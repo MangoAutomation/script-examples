@@ -1,14 +1,17 @@
 /**
  * Create a group of event detectors
+ * Was tested MANGO 4.5.X
  * The create_event_detectors.js script requires a CSV file to be present in the filestore 
  * named event-detectors-to-create.csv with the following structure: 
- * dataPointId,dataPointXid,detectorType,detectorName,limit,alarmLevel,dataPointName, any, other, column, can, be, present, but, will, be, ignored
+ * "dataPointId", "dataPointXid", "detectorType", "detectorName", "alarmLevel", "limit", "stateValues", "stateInverted", "handlers_to_link", "dataPointName", "dataPointType", any, other, column, can, be, present, but, will, be, ignored
  * 
  * This script will:
  *  1. Get and Validate headers
  *  2. Confirm the detectorType is correct
  *      LOW_LIMIT
  *      HIGH_LIMIT
+ *      MULTISTATE_STATE
+ *      BINARY_STATE
  *      Fail on a mismatch
  *      Fail if some other type of detector that is not supported
  *  3. Create the new event detector
@@ -37,10 +40,12 @@ const AlarmLevels = Java.type('com.serotonin.m2m2.rt.event.AlarmLevels');
 const dataPointService = services.dataPointService;
 const eventHandlerService = services.eventHandlerService;
 const EventHandlerDao = Java.type('com.serotonin.m2m2.db.dao.EventHandlerDao');
+const ArrayList = Java.type('java.util.ArrayList');
+
 
 
 const mainHeaders = [];
-mainHeaders.push("dataPointId", "dataPointXid", "detectorType", "detectorName", "limit", "alarmLevel", "dataPointName", "handlers_to_link");
+mainHeaders.push("dataPointId", "dataPointXid", "detectorType", "detectorName", "alarmLevel", "limit", "stateValues", "stateInverted", "handlers_to_link", "dataPointName", "dataPointType");
 
 const compare = (actual, expected, message) => {
     if (actual === expected) return
@@ -79,6 +84,8 @@ const isTypeSupported = (type) => {
     switch (type) {
         case "HIGH_LIMIT":
         case "LOW_LIMIT":
+        case "MULTISTATE_STATE":
+        case "BINARY_STATE":
             verbose(`${type}: supported`);
             return;
         default:
@@ -172,15 +179,49 @@ for (const eventDetectorCsv of eventDetectorsArray) {
         isCreated = eventHandlers.length;
     }
 
+    // Validate MultiState type and Binary
+    if (eventDetectorCsv.dataPointType === 'MULTISTATE' || eventDetectorCsv.dataPointType === 'BINARY') {
+        if (!eventDetectorCsv.stateValues) {
+            log.error(`Event detector ${eventDetectorCsv.detectorName} -> Empty state values ${eventDetectorCsv.dataPointType}`);
+            verbose(`Event detector ${eventDetectorCsv.detectorName} -> Empty state values ${eventDetectorCsv.dataPointType}`);
+            failed++;
+            isCreated = false;
+            continue;
+        }
+        else {
+            if (eventDetectorCsv.dataPointType === 'MULTISTATE') {
+                //Set MultiState value
+                const stateValues = Array.from(eventDetectorCsv.stateValues.split(handlersLinkDelimiter)).map(function (value) {
+                    return Number(value);
+                });
+                detector.setState(Number.parseInt([stateValues], 10));
+                detector.setInverted(eventDetectorCsv.stateInverted.toLowerCase() === 'true');
+                detector.setStates(stateValues.length === 1 ? null : stateValues)
+            } else if (eventDetectorCsv.dataPointType === 'BINARY') {
+                //Set Binary value
+                detector.setState(eventDetectorCsv.stateValues.toLowerCase() === 'true' || eventDetectorCsv.stateValues === '1')
+            } else {
+                log.error(`Event detector ${eventDetectorCsv.detectorName} -> Event detector type ${eventDetectorCsv.type} Not Supported for this dataPointType!`);
+                verbose(`Event detector ${eventDetectorCsv.detectorName} -> Event detector type ${eventDetectorCsv.type} Not Supported for this dataPointType!`);
+                failed++;
+                isCreated = false;
+                continue;
+            }
+        }
+    }
+
+
     if (isCreated) {
         //set name
         detector.setName(eventDetectorCsv.detectorName);
         verbose(`Detector Name: ${detector.getName()}`);
+        if (!['MULTISTATE', 'BINARY'].includes(eventDetectorCsv.dataPointType)) {
+            //set limit
+            console.log(eventDetectorCsv.dataPointType)
 
-        //set limit
-        detector.setLimit(Number.parseFloat(eventDetectorCsv.limit));
-        verbose(`Detector new limit: ${detector.getLimit()}`);
-
+            detector.setLimit(Number.parseFloat(eventDetectorCsv.limit));
+            verbose(`Detector new limit: ${detector.getLimit()}`);
+        }
         //set AlarmLevel
         detector.setAlarmLevel(validAlarmLevel);
         verbose(`Detector AlarmLevel: ${detector.getAlarmLevel()}`);
@@ -198,8 +239,6 @@ for (const eventDetectorCsv of eventDetectorsArray) {
             failed++;
             continue;
         }
-
-
 
         verbose(`Ready to Insert: ${detector.toString()}`);
 
@@ -225,8 +264,12 @@ console.log(message);
 /*
 SELECT DISTINCT dP.id as dataPointId, dP.xid as dataPointXid, 
     '' as detectorType, '' as detectorName, 
-    '' as `limit`, '' as alarmLevel, 
-    dP.name as dataPointName, '' as handlers_to_link,
+    '' as alarmLevel, '' as `limit`,  
+    '' as stateValues, '' as stateInverted,
+    '' as handlers_to_link, dP.name as dataPointName,
+    REPLACE(REPLACE(REPLACE(REPLACE(dP.dataTypeId, '1', 'BINARY'),
+       '2', 'MULTISTATE'), '3', 'NUMERIC'), '4',
+       'ALPHANUMERIC') as dataPointType,
     dS.id as dataSourceId, dS.xid as dataSourceXid,
     dS.name as dataSourceName, dS.dataSourceType
 FROM eventDetectors eD
