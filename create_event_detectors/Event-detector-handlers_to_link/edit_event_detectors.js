@@ -25,6 +25,8 @@
  *  Set enableConsoleLog = false, to disable verbose logging
  *  Set handlersLinkDelimiter = ';'...'*', to the delimiter handlers_to_link or handlers_to_remove. It cannot be a comma as this will break the CSV file format
  *  Verbose logging may impact the performance if the script is updating a large number of event detectors
+ * https://radixiot.atlassian.net/browse/RAD-3677.
+ * https://radixiot.atlassian.net/browse/RAD-3678.
  */
 const enableConsoleLog = true;
 const handlersLinkDelimiter = ';'
@@ -251,15 +253,8 @@ for (const eventDetectorCsv of eventDetectorsArray) {
     }
 
     //Validate handlers_to_link, handlers_to_remove
-    if (eventDetectorCsv.dataPointType === 'MULTISTATE' || eventDetectorCsv.dataPointType === 'BINARY') {
-
-        if (!eventDetectorCsv.newStateValues || eventDetectorCsv.newStateValues === RESERVED_EMPTY) {
-            log.error(`Event detector ${eventDetectorCsv.newDetectorName} -> Empty state values ${eventDetectorCsv.dataPointType}`);
-            verbose(`Event detector ${eventDetectorCsv.newDetectorName} -> Empty state values ${eventDetectorCsv.dataPointType}`);
-            //console.log(`Event detector ${eventDetectorCsv.detectorName} -> Empty state values ${eventDetectorCsv.dataPointType}`)
-            failed++;
-        }
-        else {
+    if (eventDetectorCsv.dataPointType === 'MULTISTATE' || eventDetectorCsv.dataPointType === 'BINARY' && (eventDetectorCsv.newStateValues != '' || eventDetectorCsv.newStateValues === RESERVED_EMPTY) ) {
+       
             if (eventDetectorCsv.dataPointType === 'MULTISTATE') {
                 //Set MultiState value
                 const stateValues = Array.from(eventDetectorCsv.newStateValues.split(handlersLinkDelimiter)).map(function (value) {
@@ -287,7 +282,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
                 verbose(`Event detector ${eventDetectorCsv.newDetectorName} -> Event detector type ${eventDetectorCsv.type} Not Supported for this dataPointType!`);
                 failed++;
             }
-        }
+     
     }
 
 
