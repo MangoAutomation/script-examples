@@ -1,5 +1,6 @@
 # Event detector scripts user guide.
 ### Tested MANGO 4.5.x
+##### Updated 09/18/2023
 This document explains how to create, edit, and delete event detectors in bulk using these scripts.
 
 # Contents
@@ -22,7 +23,7 @@ Suggested SQL query to create the CSV file
 
 # Prerequisites 
 
-For each script to work, a comma separated values (*.csv) file is required in the Mango file store, as well as the script. The csv input files are created by running an SQL query and then manually edited by the user to set the required information.
+For each script to work, a comma separated values (*.csv) file is required in the Mango file store, as well as the script. The csv input files are created by running an SQL query and then reviewed & edited by the user to confirm information is correct.
 
 # General usage steps 
 
@@ -59,28 +60,28 @@ Used to create a group of even detectors. The create\_event\_detectors.js script
 
 - **dataPointId** (prefilled by the SQL and can be edited) is the datapoint's **NUMERIC** id
 - **dataPointXid** (prefilled by the SQL and can be edited) is the datapoint's **ALPHANUMERIC** XId
-- **detectorType (used defined)** LOW\_LIMIT or HIGH\_LIMIT
+- **detectorType (used defined)** LOW\_LIMIT or HIGH\_LIMIT or MULTISTATE\_STATE & BINARY\_STATE
 - **detectorName (used defined)** a name to identify the detector.
 - **limit (user defined) NUMERIC** value to trigger the event detector.
 - **alarmLevel (user defined)** valid levels: NONE, INFORMATION, IMPORTANT, WARNING, URGENT, CRITICAL, LIFE\_SAFETY, DO\_NOT\_LOG, IGNORE
 - **All the columns right to the alarmLevel are only informational for the user and will be ignored by the script.**
-- **Handlers\_to\_link** Links handlers from the event detector were not in the original, they are delimited for a customs symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
-- **stateValues** Links  from the event detector were not in the original, they are delimited for a customs symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
+- **Handlers\_to\_link** Links event handlers to the new event detector. This can be a list of event handler IDs, delimited with a custom symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
+- **stateValues** Sets the state value(s) for MULTISTATE\_STATE & BINARY\_STATE event detectors. If listing more than 1 state value, use a delimiter symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
+- **duration** Is integer value to represent duration run event.
+- **durationType** Is a integer the represent interval value ***1 =  SECONDS, 2 = MINUTES ,3 = HOURS, 4 = DAYS.***
 
 This script will:
 
 1. Get and Validate headers.
-2. Confirm the detectorType is correct. (Only LOW\_LIMIT and HIGH\_LIMIT is allowed)
-  1. LOW\_LIMIT or HIGH\_LIMIT
-  2. Fail on a mismatch.
-  3. Fail if some other type of detector that is not supported.
+2. Confirm the detectorType is correct. (Only LOW\_LIMIT,  HIGH\_LIMIT, MULTISTATE\_STATE, and BINARY\_STATE are allowed)
+  1. Fail on a mismatch.
+  2. Fail if some other type of detector that is not supported.
 3. Validate the datapoint.
 4. Create the new event detector.
-5. Set the detectorType, DetectorName, Limit, and/or AlarmLevel values as needed.
-  1. If any of the new\* columns are empty, that value should be left unchanged.
+5. Set the detectorType, DetectorName, Limit or State(s), and/or AlarmLevel values as needed.
 6. Insert the event detector.
 7. Handlers\_to\_link has no event handler links please write EMPTY
-8. The delimiter const will be on top file, line 28 const handlersLinkDelimiter = ';'
+8. The delimiter const will be near the top of the script file: const handlersLinkDelimiter = ';'
 
 ## Suggested SQL query to create the CSV file 
 
@@ -88,27 +89,36 @@ The goal of the SQL query is obtaining a prefilled CSV file ready to be edited b
 
 DO NOT modify the query in the lines before the WHERE clause. However, the lines after the WHERE clause can be updated as needed to limit the query based on specific Data Sources, Data Points, or some combination of the two. Additional WHERE clauses can be added as needed.
 
-      SELECT DISTINCT dP.id as dataPointId, dP.xid as dataPointXid, 
-      '' as detectorType, '' as detectorName, 
-      '' as alarmLevel, '' as `limit`,  
-      '' as stateValues, '' as stateInverted,
-      '' as handlers_to_link, dP.name as dataPointName,
-      REPLACE(REPLACE(REPLACE(REPLACE(dP.dataTypeId, '1', 'BINARY'),
-        '2', 'MULTISTATE'), '3', 'NUMERIC'), '4',
-        'ALPHANUMERIC') as dataPointType,
-      dS.id as dataSourceId, dS.xid as dataSourceXid,
-      dS.name as dataSourceName, dS.dataSourceType
-      FROM eventDetectors eD
-      INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
-      INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
-      WHERE
+    SELECT DISTINCT 
+		dP.id as dataPointId, 
+		dP.xid as dataPointXid, 
+		'' as detectorType, 
+		'' as detectorName,
+		'' as alarmLevel,
+		'' as `limit`,
+		'' as stateValues,
+		'' as stateInverted,
+		'' as duration,
+		'' as durationType,
+		'' as handlers_to_link, 
+		dP.name as dataPointName,
+			REPLACE(REPLACE(REPLACE(REPLACE(dP.dataTypeId, '1', 'BINARY'), '2', 'MULTISTATE'), '3', 'NUMERIC'), '4', 'ALPHANUMERIC') as dataPointType,
+		dS.id as dataSourceId, 
+		dS.xid as dataSourceXid,
+		dS.name as dataSourceName, 
+		dS.dataSourceType
+    
+	FROM  dataPoints dP
+		INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
+      
+	WHERE
           (
-              dS.xid IN ('DS_b3dfc7fa-416e-4650-b8de-b521ce288275')
+              dS.xid IN ('[USER INPUT FOR THE XID 1], [USER INPUT FOR THE XID 2][…]')
           )
-      AND
+          AND
           (
-              dP.name LIKE 'onOffAlarmPoint%'
-          )
+              dP.name LIKE '[USER defined pattern], […] '
+          );
 
 # EDIT event detectors script
 
@@ -118,14 +128,15 @@ Used to edit a group of even detectors. The **edit\_event\_detectors.js** script
 
 - **eventDetectorId** (prefilled by the SQL query, not editable) is the event detector **NUMERIC** id.
 - **eventDetectorXid** (prefilled by the SQL query, not editable) is the event detector **ALPHANUMERIC** XId.
-- **detectorType (**prefilled by the SQL query, not editable**)** LOW\_LIMIT or HIGH\_LIMIT
+- **detectorType (**prefilled by the SQL query, not editable**)** LOW\_LIMIT or HIGH\_LIMIT or MULTISTATE\_STATE or BINARY\_STATE
 - **newDetectorName** **(used defined)** a name to identify the detector.
 - **newLimit** **(user defined) NUMERIC** value to trigger the event detector.
 - **newAlarmLevel** **(user defined)** valid levels: NONE, INFORMATION, IMPORTANT, WARNING, URGENT, CRITICAL, LIFE\_SAFETY, DO\_NOT\_LOG, IGNORE
 - **All the columns right to the alarmLevel are only informational for the user and will be ignored by the script.**
-- **Handlers\_to\_link** Links handlers from the event detector were not in the original, they are delimited for a customs symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
-- **Handlers\_to\_remove** Links handlers from the event detector were not in the original, they are delimited for a customs symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format
-- **Handlers\_to\_remove** Links handlers from the event detector were not in the original, they are delimited for a customs symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format
+- **newDuration** Is integer value to represent duration run event.
+- **newDurationType** Is a integer the represent interval value ***1 =  SECONDS, 2 = MINUTES ,3 = HOURS, 4 = DAYS.***
+- **Handlers\_to\_link** Links event handlers to the event detector that were not already linked to this detector. This can be a list of event handler IDs, delimited with a custom symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
+- **Handlers\_to\_remove** Unlinks event handlers from the event detector if they were previously linked to this detector. This can be a list of event handler IDs, delimited with a custom symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
 - **stateValues** Links  from the event detector were not in the original, they are delimited for a customs symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
 
 
@@ -134,29 +145,41 @@ This script will:
 1. Get and Validate headers.
 2. Locate the event detector that matches the eventDetectorXid provided
 3. Confirm the id is also a match (always double-verify before editing things)
-4. Confirm the detectorType is correct. (Only LOW\_LIMIT and HIGH\_LIMIT is allowed)
-  1. LOW\_LIMIT or HIGH\_LIMIT
-  2. Fail on a mismatch.
-  3. Fail if some other type of detector that is not supported.
+4. Confirm the detectorType is correct. (Only LOW\_LIMIT,  HIGH\_LIMIT, MULTISTATE\_STATE, and BINARY\_STATE are allowed)
+  1. Fail on a mismatch.
+  2. Fail if some other type of detector that is not supported.
 5. Set the new DetectorName, Limit, and/or AlarmLevel values as needed.
   1. If any of the new\* columns are empty, that value should be left unchanged Create the new event detector.
 6. Insert the event detector.
-7. The delimiter const will be on top file, line 27 const handlersLinkDelimiter = ';'
+7. The delimiter const will be near the top of the file: const handlersLinkDelimiter = ';'
 
 NOTE: "EMPTY" is not a valid name for an event detector using this script
 
-## Suggested SQL query to create the CSV file 
+## Suggested SQL query to edit the CSV file 
 
 The goal of the SQL query is obtaining a prefilled CSV file ready to be edited by the user.
 
 DO NOT modify the query in the lines before the WHERE clause. However, the lines after the WHERE clause can be updated as needed to limit the query based on specific Data Sources, Data Points, Event Detector types, Event Detector names, or some combination of these. Additional WHERE clauses can be added as needed.
-#### The above query is only for Mysql ####
+#### The following query (Edit) is only for Mysql ####
 
-      SELECT DISTINCT eD.id as eventDetectorId, eD.xid as eventDetectorXid, eD.typeName as detectorType,
-      '' as newDetectorName, '' as newAlarmLevel, '' as newLimit, '' as newStateValues,
-      '' as newStateInverted, '' as handlers_to_link, '' as handlers_to_remove,
-      eD.data->>'$.name' as existingName, eD.data->>'$.alarmLevel' as existingAlarmLevel,
+      SELECT DISTINCT 
+	  eD.id as eventDetectorId,
+	  eD.xid as eventDetectorXid,
+	  eD.typeName as detectorType,
+      '' as newDetectorName,
+	  '' as newAlarmLevel, 
+	  '' as newLimit, 
+	  '' as newStateValues,
+      '' as newStateInverted, 
+	  '' as newDuration,
+	  '' as newDurationType,
+	  '' as handlers_to_link, 
+	  '' as handlers_to_remove,
+      eD.data->>'$.name' as existingName, 
+	  eD.data->>'$.alarmLevel' as existingAlarmLevel,
       eD.data->>'$.limit' as existingLimit,
+	  eD.data->>'$.duration' as existingDuration,
+	  REPLACE(REPLACE(REPLACE(REPLACE(eD.data->>'$.durationType','SECONDS',1),'MINUTES',2),'HOURS',3),'DAYS',4) as existingDurationType,
       CASE
           WHEN eD.data->>'$.states' = 'null' THEN eD.data->>'$.state'
           ELSE REPLACE(REPLACE(REPLACE(eD.data->>'$.states', '[', ''), ']', ''), ',', ';')
@@ -171,29 +194,87 @@ DO NOT modify the query in the lines before the WHERE clause. However, the lines
       INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
       INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
       WHERE
-          (
-              eD.data->>'$.sourceType' IN ('DATA_POINT')
-          )
-      AND 
-          (
-              dS.id IN (63, 65, 69)
-              OR
-              dS.xid IN ('DS_b3dfc7fa-416e-4650-b8de-b521ce288275')
-          )
-      AND
-        (
-          eD.typeName IN ('HIGH_LIMIT', 'LOW_LIMIT', 'BINARY_STATE', 'MULTISTATE_STATE')
-        )
-      AND
-          (
-              dP.name LIKE 'onOffAlarmPoint%'
-          )
-      AND
-          (
-              eD.data->>'$.name' LIKE 'Weather%'
-              OR
-              eD.data->>'$.name' LIKE 'weather%'
-          )
+			  (
+				  eD.data->>'$.sourceType' IN ('DATA_POINT')
+			  )
+		  AND 
+			  (
+				  dS.id IN (63, 65, 69)
+				  OR
+				  dS.xid IN ('[USER INPUT FOR THE XID 1], [USER INPUT FOR THE XID 2][…]')
+			  )
+		  AND
+			(
+			  eD.typeName IN ('HIGH_LIMIT', 'LOW_LIMIT', 'BINARY_STATE', 'MULTISTATE_STATE')
+			)
+		  AND
+			  (
+				  dP.name LIKE 'onOffAlarmPoint%'
+			  )
+		  AND
+			  (
+				  eD.data->>'$.name' LIKE 'Weather%'
+				  OR
+				  eD.data->>'$.name' LIKE 'weather%'
+			  );
+
+#### The following query (EDIT) is only for MariaDB w/JSON data type included ####
+
+	SELECT DISTINCT 
+			eD.id as eventDetectorId, 
+			eD.xid as eventDetectorXid, 
+			eD.typeName as detectorType,
+			'' as newDetectorName, 
+			'' as newAlarmLevel, 
+			'' as newLimit, 
+			'' as newStateValues,
+			'' as newStateInverted, 
+			'' as newDuration, 
+			'' as newDurationType,
+			'' as handlers_to_link, 
+			'' as handlers_to_remove,
+			dS.dataSourceType as dataPointType,
+            JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.name')) as existingName,
+            JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.alarmLevel')) as existingAlarmLevel,
+            JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.limit')) as existingLimit,
+			JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.duration')) as existingDuration,
+			REPLACE(REPLACE(REPLACE(REPLACE(JSON_UNQUOTE(JSON_EXTRACT(eD.data,'$.durationType')),'SECONDS',1),'MINUTES',2),'HOURS',3),'DAYS',4) as existingDurationType,
+		CASE
+			WHEN JSON_EXTRACT(eD.data, '$.states') IS NULL 
+			THEN JSON_EXTRACT(eD.data, '$.state') 
+			ELSE REPLACE(REPLACE(REPLACE(JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.states')), '[', ''), ']', ''), ',', ';')
+		END as existingStateValues,
+			JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.inverted')) as existingStateInverted, 
+			dP.name as dataPointName,
+			REPLACE(REPLACE(REPLACE(REPLACE(dP.dataTypeId, '1', 'BINARY'), '2', 'MULTISTATE'), '3', 'NUMERIC'), '4', 'ALPHANUMERIC') AS dataPointType, 
+			JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.sourceType')) as detectorSourceType,
+			dP.id as dataPointId, 
+			dP.xid as dataPointXid, 
+			dS.id as dataSourceId, 
+			dS.xid as dataSourceXid,
+			dS.name as dataSourceName
+	FROM 
+			eventDetectors eD
+			INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
+			INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
+		WHERE
+			
+				dS.id IN (63, 65, 69)
+				OR
+				dS.xid IN ('[USER INPUT FOR THE XID 1], [USER INPUT FOR THE XID 2][…]')
+			
+			AND 
+				eD.typeName IN ('HIGH_LIMIT', 'LOW_LIMIT', 'BINARY_STATE', 'MULTISTATE_STATE')
+			
+			AND 
+				dP.name = '[USER INPUT FOR THE dataPointName]'
+			
+			AND 
+				JSON_EXTRACT(eD.data,'$.name') LIKE '[USER INPUT FOR THE EVENT DETECTOR NAME]'
+				OR 
+				JSON_EXTRACT(eD.data,'$.name') LIKE '[USER INPUT FOR THE EVENT DETECTOR NAME]';
+
+
 
 
 # DELETE event detectors script. 
@@ -213,31 +294,30 @@ This script will:
 3. Confirm the id is also a match (always double-verify before editing things)
 4. Delete the event detector.
 
-## Suggested SQL query to create the CSV file 
+## Suggested SQL query to delete the CSV file 
 
 The goal of the SQL query is obtaining a prefilled CSV file ready to be edited by the user.
 
 DO NOT modify the query in the lines before the WHERE clause. However, the lines after the WHERE clause can be updated as needed to limit the query based on specific Data Sources, Data Points, or some combination of the two. Additional WHERE clauses can be added as needed.
 
-    SELECT DISTINCT eD.id as eventDetectorId, eD.xid as eventDetectorXid,
-
-    dP.id as dataPointId, dP.xid as dataPointXid,
-
-    eD.sourceTypeName as detectorsourceTypeName, eD.TypeName as detectorTypeName,
-
-    '' as `limit`, '' as alarmLevel,
-
-    dP.name as dataPointName, dS.id as dataSourceId,
-
-    dS.xid as dataSourceXid, dS.name as dataSourceName, dS.dataSourceType,
-
-    eD.data as detectorData
-
-    FROM eventDetectors eD
-
-    INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
-
-    INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
+    SELECT DISTINCT 
+		eD.id as eventDetectorId, 
+		eD.xid as eventDetectorXid,
+		dP.id as dataPointId, 
+		dP.xid as dataPointXid,
+		eD.sourceTypeName as detectorsourceTypeName, 
+		eD.TypeName as detectorTypeName,
+		'' as `limit`, 
+		'' as alarmLevel,
+		dP.name as dataPointName, 
+		dS.id as dataSourceId,
+		dS.xid as dataSourceXid, 
+		dS.name as dataSourceName, 
+		dS.dataSourceType,
+		eD.data as detectorData
+	FROM eventDetectors eD
+		INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
+		INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
     WHERE
 
     (

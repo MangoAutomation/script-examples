@@ -1,8 +1,9 @@
 /** Edit a group of even detectors
  * Was Tested MANGO 4.5.x
+ * Last update September-2023
  * The edit_event_detectors.js script requires a CSV file to be present in the filestore 
  * named event-detectors-to-edit.csv with the following structure: 
- * eventDetectorId, eventDetectorXid, detectorType, newDetectorName, newLimit, newAlarmLevel, newStateValues, newStateInverted, handlers_to_link, handlers_to_remove", dataPointType, any, other, column, can, be, present, but, will, be, ignored
+ * eventDetectorId, eventDetectorXid, detectorType, newDetectorName, newLimit, newAlarmLevel, newStateValues, newStateInverted,newDuration,newDuration_unit, handlers_to_link, handlers_to_remove", dataPointType, any, other, column, can, be, present, but, will, be, ignored
  * 
  * This script will:
  *     1. Locate the event detector that matches the eventDetectorXid provided
@@ -23,13 +24,20 @@
  * User configurable variable:
  *  Set enableConsoleLog = true, to enable verbose logging
  *  Set enableConsoleLog = false, to disable verbose logging
+ * 
+ *  ==== DURATION TYPE CONVENTIONS ====
+ *   SECONDS = 1;
+     MINUTES = 2;
+     HOURS = 3;
+     DAYS = 4;
+   
+ *  =================
  *  Set handlersLinkDelimiter = ';'...'*', to the delimiter handlers_to_link or handlers_to_remove. It cannot be a comma as this will break the CSV file format
  *  Verbose logging may impact the performance if the script is updating a large number of event detectors
- * https://radixiot.atlassian.net/browse/RAD-3677.
- * https://radixiot.atlassian.net/browse/RAD-3678.
- */
+*/
 const enableConsoleLog = true;
 const handlersLinkDelimiter = ';'
+
 
 const fileName = 'event-detectors-to-edit.csv';
 const fileStorePath = 'default';
@@ -39,7 +47,7 @@ const AlarmLevels = Java.type('com.serotonin.m2m2.rt.event.AlarmLevels');
 const eventHandlerService = services.eventHandlerService;
 
 const mainHeaders = [];
-mainHeaders.push("eventDetectorId", "eventDetectorXid", "detectorType", "newDetectorName", "newAlarmLevel", "newLimit", "newStateValues", "newStateInverted", "handlers_to_link", "handlers_to_remove", "dataPointType");
+mainHeaders.push("eventDetectorId", "eventDetectorXid", "detectorType", "newDetectorName", "newAlarmLevel", "newLimit", "newStateValues", "newStateInverted", "newDuration", "newDurationType", "handlers_to_link", "handlers_to_remove", "dataPointType");
 
 const compare = (actual, expected, message) => {
     if (actual === expected) return
@@ -150,6 +158,41 @@ for (const eventDetectorCsv of eventDetectorsArray) {
 
         update = true;
     }
+    // Set duration if newDuration is different empty
+    let duration_unit = 1;
+    if (!['', 'EMPTY'].includes(eventDetectorCsv.newDuration)) {
+        try {
+            if (Number.isNaN(Number.parseInt(eventDetectorCsv.newDuration))) {
+                throw new Error(`duration ${eventDetectorCsv.newDuration}: Not Supported!`)
+            } else {
+                verbose(`Detector Named: ${detector.getName()} change duration ${eventDetectorCsv.newDuration}`);
+                detector.setDuration(Number.parseInt(eventDetectorCsv.newDuration))
+                update = true;
+            }
+        } catch (e) {
+            log.error('Duration is:{}', e);
+            verbose(`Duration failed Reason: ${e}`);
+            failed++;
+            continue;
+        }
+    }
+
+    // Set duration if newDurationType is different empty or valid duration type 1,2,3,4
+    if (!['', 'EMPTY'].includes(eventDetectorCsv.newDurationUnit)) {
+        try {
+            if (![1, 2, 3, 4].includes(Number.parseInt(eventDetectorCsv.newDurationType))) {
+                throw new Error(`duration unit ${type}: Not Supported!`)
+            }
+            detector.setDurationType(Number.parseInt(eventDetectorCsv.newDurationType))
+            verbose(`Detector Name: ${detector.getName()} change duration unit ${eventDetectorCsv.newDurationType}`);
+            update = true
+
+        } catch (typeError) {
+            verbose(`Duration Unit failed Reason: ${typeError}`);
+            failed++;
+            continue;
+        }
+    }
 
     if (eventDetectorCsv.newLimit && eventDetectorCsv.newLimit != RESERVED_EMPTY) {
         verbose(`editing Detector limit: ${detector.getName()} to new limit ${eventDetectorCsv.newLimit}`);
@@ -253,36 +296,36 @@ for (const eventDetectorCsv of eventDetectorsArray) {
     }
 
     //Validate handlers_to_link, handlers_to_remove
-    if (eventDetectorCsv.dataPointType === 'MULTISTATE' || eventDetectorCsv.dataPointType === 'BINARY' && (eventDetectorCsv.newStateValues != '' || eventDetectorCsv.newStateValues === RESERVED_EMPTY) ) {
-       
-            if (eventDetectorCsv.dataPointType === 'MULTISTATE') {
-                //Set MultiState value
-                const stateValues = Array.from(eventDetectorCsv.newStateValues.split(handlersLinkDelimiter)).map(function (value) {
-                    return Number(value);
-                });
-                detector.setState(Number.parseInt([stateValues], 10));
-                if (['true', 'false'].includes(eventDetectorCsv.newStateInverted.toLowerCase())) {
-                    detector.setInverted(eventDetectorCsv.newStateInverted.toLowerCase() === 'true' || eventDetectorCsv.newStateInverted === '1');
-                } else {
-                    if (['empty', ''].includes(eventDetectorCsv.newStateInverted.toLowerCase())) {
-                        log.error(`Event detector ${eventDetectorCsv.newDetectorName} -> stateInverted is not allow ${eventDetectorCsv.newStateInverted}`);
-                        verbose(`Event detector ${eventDetectorCsv.newDetectorName} -> stateInverted is not allow ${eventDetectorCsv.newStateInverted}`);
-                        failed++;
-                    }
-                }
-                detector.setStates(stateValues.length === 1 ? null : stateValues)
-                update = true
-            } else if (eventDetectorCsv.dataPointType === 'BINARY' && ['true', 'false'].includes(eventDetectorCsv.newStateValues)) {
-                //Set Binary value
-                console.log('get state', detector.getState, '----', eventDetectorCsv.newStateValues.toLowerCase())
-                detector.setState(eventDetectorCsv.newStateValues.toLowerCase() === 'true' || eventDetectorCsv.newStateValues === '1')
-                update = true
+    if (eventDetectorCsv.dataPointType === 'MULTISTATE' || eventDetectorCsv.dataPointType === 'BINARY' && (eventDetectorCsv.newStateValues != '' || eventDetectorCsv.newStateValues === RESERVED_EMPTY)) {
+
+        if (eventDetectorCsv.dataPointType === 'MULTISTATE') {
+            //Set MultiState value
+            const stateValues = Array.from(eventDetectorCsv.newStateValues.split(handlersLinkDelimiter)).map(function (value) {
+                return Number(value);
+            });
+            detector.setState(Number.parseInt([stateValues], 10));
+            if (['true', 'false'].includes(eventDetectorCsv.newStateInverted.toLowerCase())) {
+                detector.setInverted(eventDetectorCsv.newStateInverted.toLowerCase() === 'true' || eventDetectorCsv.newStateInverted === '1');
             } else {
-                log.error(`Event detector ${eventDetectorCsv.newDetectorName} -> Event detector type ${eventDetectorCsv.type} Not Supported for this dataPointType!`);
-                verbose(`Event detector ${eventDetectorCsv.newDetectorName} -> Event detector type ${eventDetectorCsv.type} Not Supported for this dataPointType!`);
-                failed++;
+                if (['empty', ''].includes(eventDetectorCsv.newStateInverted.toLowerCase())) {
+                    log.error(`Event detector ${eventDetectorCsv.newDetectorName} -> stateInverted is not allow ${eventDetectorCsv.newStateInverted}`);
+                    verbose(`Event detector ${eventDetectorCsv.newDetectorName} -> stateInverted is not allow ${eventDetectorCsv.newStateInverted}`);
+                    failed++;
+                }
             }
-     
+            detector.setStates(stateValues.length === 1 ? null : stateValues)
+            update = true
+        } else if (eventDetectorCsv.dataPointType === 'BINARY' && ['true', 'false'].includes(eventDetectorCsv.newStateValues)) {
+            //Set Binary value
+            console.log('get state', detector.getState, '----', eventDetectorCsv.newStateValues.toLowerCase())
+            detector.setState(eventDetectorCsv.newStateValues.toLowerCase() === 'true' || eventDetectorCsv.newStateValues === '1')
+            update = true
+        } else {
+            log.error(`Event detector ${eventDetectorCsv.newDetectorName} -> Event detector type ${eventDetectorCsv.type} Not Supported for this dataPointType!`);
+            verbose(`Event detector ${eventDetectorCsv.newDetectorName} -> Event detector type ${eventDetectorCsv.type} Not Supported for this dataPointType!`);
+            failed++;
+        }
+
     }
 
 
@@ -315,9 +358,16 @@ console.log(message);
 
 SELECT DISTINCT eD.id as eventDetectorId, eD.xid as eventDetectorXid, eD.typeName as detectorType,
     '' as newDetectorName, '' as newAlarmLevel, '' as newLimit, '' as newStateValues,
-    '' as newStateInverted, '' as handlers_to_link, '' as handlers_to_remove,
-    eD.data->>'$.name' as existingName, eD.data->>'$.alarmLevel' as existingAlarmLevel,
+    '' as newStateInverted, 
+    '' as newDuration, 
+    '' as newDurationType,
+    '' as handlers_to_link, 
+    '' as handlers_to_remove,
+    eD.data->>'$.name' as existingName,
+    eD.data->>'$.alarmLevel' as existingAlarmLevel,
     eD.data->>'$.limit' as existingLimit,
+    eD.data->>'$.duration' as existingDuration,
+    REPLACE(REPLACE(REPLACE(REPLACE(eD.data->>'$.durationType','SECONDS',1),'MINUTES',2),'HOURS',3),'DAYS',4) as existingDurationType,
     CASE
         WHEN eD.data->>'$.states' = 'null' THEN eD.data->>'$.state'
         ELSE REPLACE(REPLACE(REPLACE(eD.data->>'$.states', '[', ''), ']', ''), ',', ';')
