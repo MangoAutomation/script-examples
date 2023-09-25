@@ -56,19 +56,22 @@ Set enableConsoleLog = false, to disable verbose logging
 
 Used to create a group of even detectors. The create\_event\_detectors.js script requires a CSV file to be present in the file store named event-detectors-to-create.csv with the following structure:
 
-**dataPointId, dataPointXid, detectorType, detectorName, limit, alarmLevel,**** dataPointName **,** handlers\_to\_link,** any, other, column, can, be, present, but will, be, ignored
+**dataPointId, dataPointXid, detectorType, detectorName,alarmLevel,limit,duration,durationType, handlers_to_link,dataPointName,dataPointType** any, other, column, can, be, present, but will, be, ignored
 
 - **dataPointId** (prefilled by the SQL and can be edited) is the datapoint's **NUMERIC** id
 - **dataPointXid** (prefilled by the SQL and can be edited) is the datapoint's **ALPHANUMERIC** XId
 - **detectorType (used defined)** LOW\_LIMIT or HIGH\_LIMIT or MULTISTATE\_STATE & BINARY\_STATE
 - **detectorName (used defined)** a name to identify the detector.
-- **limit (user defined) NUMERIC** value to trigger the event detector.
 - **alarmLevel (user defined)** valid levels: NONE, INFORMATION, IMPORTANT, WARNING, URGENT, CRITICAL, LIFE\_SAFETY, DO\_NOT\_LOG, IGNORE
-- **All the columns right to the alarmLevel are only informational for the user and will be ignored by the script.**
-- **Handlers\_to\_link** Links event handlers to the new event detector. This can be a list of event handler IDs, delimited with a custom symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
+- **limit (user defined) NUMERIC** value to trigger the event detector.
 - **stateValues** Sets the state value(s) for MULTISTATE\_STATE & BINARY\_STATE event detectors. If listing more than 1 state value, use a delimiter symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
+--**stateInverted** is true or false for MULTISTATE\_STATE & BINARY\_STATE
 - **duration** Is integer value to represent duration run event.
 - **durationType** Is a integer the represent interval value ***1 =  SECONDS, 2 = MINUTES ,3 = HOURS, 4 = DAYS.***
+- **Handlers\_to\_link** Links event handlers to the new event detector. This can be a list of event handler IDs, delimited with a custom symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
+- **dataPointName** is only for control
+- **dataPointType** is the type numeric,MULTISTATE\_BINARY\_NUMERIC
+- **All the columns right to the alarmLevel are only informational for the user and will be ignored by the script.**
 
 This script will:
 
@@ -124,20 +127,21 @@ DO NOT modify the query in the lines before the WHERE clause. However, the lines
 
 Used to edit a group of even detectors. The **edit\_event\_detectors.js** script requires a CSV file to be present in the file stores named **event-detectors-to-edit.csv** with the following structure:
 
-**eventDetectorId, eventDetectorXid, detectorType, newDetectorName, newLimit, newAlarmLevel, handlers\_to\_link, handlers\_to\_remove** any, other, column, can, be, present, but will, be, ignored
+**eventDetectorId, eventDetectorXid, detectorType, newDetectorName, newAlarmLevel  newLimit, newStateValues,newStateInverted,newDuration,newDurationType"handlers\_to\_link, handlers\_to\_remove,dataPointType** any, other, column, can, be, present, but will, be, ignored
 
 - **eventDetectorId** (prefilled by the SQL query, not editable) is the event detector **NUMERIC** id.
 - **eventDetectorXid** (prefilled by the SQL query, not editable) is the event detector **ALPHANUMERIC** XId.
 - **detectorType (**prefilled by the SQL query, not editable**)** LOW\_LIMIT or HIGH\_LIMIT or MULTISTATE\_STATE or BINARY\_STATE
 - **newDetectorName** **(used defined)** a name to identify the detector.
-- **newLimit** **(user defined) NUMERIC** value to trigger the event detector.
 - **newAlarmLevel** **(user defined)** valid levels: NONE, INFORMATION, IMPORTANT, WARNING, URGENT, CRITICAL, LIFE\_SAFETY, DO\_NOT\_LOG, IGNORE
-- **All the columns right to the alarmLevel are only informational for the user and will be ignored by the script.**
+- **stateValues** Sets the state value(s) for MULTISTATE\_STATE & BINARY\_STATE event detectors. If listing more than 1 state value, use a delimiter symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
+--**stateInverted** is true or false for MULTISTATE\_STATE & BINARY\_STATE
 - **newDuration** Is integer value to represent duration run event.
 - **newDurationType** Is a integer the represent interval value ***1 =  SECONDS, 2 = MINUTES ,3 = HOURS, 4 = DAYS.***
 - **Handlers\_to\_link** Links event handlers to the event detector that were not already linked to this detector. This can be a list of event handler IDs, delimited with a custom symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
 - **Handlers\_to\_remove** Unlinks event handlers from the event detector if they were previously linked to this detector. This can be a list of event handler IDs, delimited with a custom symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
-- **stateValues** Links  from the event detector were not in the original, they are delimited for a customs symbol ";, \*, ||", please do not use comma delimiter. It will break the CSV file format.
+
+- **All the columns right to the alarmLevel are only informational for the user and will be ignored by the script.**
 
 
 This script will:
