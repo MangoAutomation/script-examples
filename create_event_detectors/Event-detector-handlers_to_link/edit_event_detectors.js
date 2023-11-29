@@ -178,7 +178,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
     }
 
     // Set duration if newDurationType is different empty or valid duration type 1,2,3,4
-    if (!['', 'EMPTY'].includes(eventDetectorCsv.newDurationUnit)) {
+    if (!['', 'EMPTY'].includes(eventDetectorCsv.newDurationType)) {
         try {
             if (![1, 2, 3, 4].includes(Number.parseInt(eventDetectorCsv.newDurationType))) {
                 throw new Error(`duration unit ${type}: Not Supported!`)
