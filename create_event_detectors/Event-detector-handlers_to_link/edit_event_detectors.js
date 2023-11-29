@@ -67,7 +67,7 @@ function readCsv(fileStore, filePath) {
 
     //Get the data
     for (let i = 0; i < lines.length; i++) {
-        const row = lines[i].replace(/["']/g, "").replace(/\s+/g, "").split(',');
+        const row = lines[i].replace(/["']/g, "").split(',');
         const data = lines[i] = {};
         for (let j = 0; j < row.length; j++) {
             data[header[j]] = row[j];
@@ -178,7 +178,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
     }
 
     // Set duration if newDurationType is different empty or valid duration type 1,2,3,4
-    if (!['', 'EMPTY'].includes(eventDetectorCsv.newDurationUnit)) {
+    if (!['', 'EMPTY'].includes(eventDetectorCsv.newDurationType)) {
         try {
             if (![1, 2, 3, 4].includes(Number.parseInt(eventDetectorCsv.newDurationType))) {
                 throw new Error(`duration unit ${type}: Not Supported!`)
@@ -231,7 +231,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
     }
 
     let foundEventHandlers = [];
-    if (!eventDetectorCsv.handlers_to_link || eventDetectorCsv.handlers_to_link !== RESERVED_EMPTY) {
+    if (eventDetectorCsv.handlers_to_link && eventDetectorCsv.handlers_to_link !== RESERVED_EMPTY) {
         const handlersLink = eventDetectorCsv.handlers_to_link.split(handlersLinkDelimiter);
         for (const xid of Array.from(handlersLink)) {
             try {
@@ -258,7 +258,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
     }
 
     //Validate handlers_to_remove
-    if (!eventDetectorCsv.handlers_to_remove || eventDetectorCsv.handlers_to_remove !== RESERVED_EMPTY) {
+    if (eventDetectorCsv.handlers_to_remove && eventDetectorCsv.handlers_to_remove !== RESERVED_EMPTY) {
         foundEventHandlers = [];
         const handlersLink = eventDetectorCsv.handlers_to_remove.split(handlersLinkDelimiter);
         for (const xid of Array.from(handlersLink)) {
@@ -266,8 +266,8 @@ for (const eventDetectorCsv of eventDetectorsArray) {
                 eventHandlerService.get(xid)
                 foundEventHandlers.push(xid)
             } catch (e) {
-                log.error('Failed Linking the event handler with XId {} NOT FOUND!', xid);
-                verbose(`Failed Linking the event handler with XId ${xid} NOT FOUND!`);
+                log.error('Failed Removing the event handler with XId {} NOT FOUND!', xid);
+                verbose(`Failed Removing the event handler with XId ${xid} NOT FOUND!`);
                 continue;
             }
         }
@@ -304,17 +304,19 @@ for (const eventDetectorCsv of eventDetectorsArray) {
                 return Number(value);
             });
             detector.setState(Number.parseInt([stateValues], 10));
-            if (['true', 'false'].includes(eventDetectorCsv.newStateInverted.toLowerCase())) {
-                detector.setInverted(eventDetectorCsv.newStateInverted.toLowerCase() === 'true' || eventDetectorCsv.newStateInverted === '1');
-            } else {
-                if (['empty', ''].includes(eventDetectorCsv.newStateInverted.toLowerCase())) {
-                    log.error(`Event detector ${eventDetectorCsv.newDetectorName} -> stateInverted is not allow ${eventDetectorCsv.newStateInverted}`);
-                    verbose(`Event detector ${eventDetectorCsv.newDetectorName} -> stateInverted is not allow ${eventDetectorCsv.newStateInverted}`);
-                    failed++;
-                }
+            if (eventDetectorCsv.newStateInverted && eventDetectorCsv.newStateInverted !== RESERVED_EMPTY) {
+                 if (['true', 'false'].includes(eventDetectorCsv.newStateInverted.toLowerCase())) {
+                     detector.setInverted(eventDetectorCsv.newStateInverted.toLowerCase() === 'true' || eventDetectorCsv.newStateInverted === '1');
+                 } else {
+                     if (['empty', ''].includes(eventDetectorCsv.newStateInverted.toLowerCase())) {
+                         log.error(`Event detector ${eventDetectorCsv.newDetectorName} -> stateInverted is not allow ${eventDetectorCsv.newStateInverted}`);
+                         verbose(`Event detector ${eventDetectorCsv.newDetectorName} -> stateInverted is not allow ${eventDetectorCsv.newStateInverted}`);
+                         failed++;
+                     }
+                 }
+                 detector.setStates(stateValues.length === 1 ? null : stateValues)
+                 update = true
             }
-            detector.setStates(stateValues.length === 1 ? null : stateValues)
-            update = true
         } else if (eventDetectorCsv.dataPointType === 'BINARY' && ['true', 'false'].includes(eventDetectorCsv.newStateValues)) {
             //Set Binary value
             console.log('get state', detector.getState, '----', eventDetectorCsv.newStateValues.toLowerCase())
