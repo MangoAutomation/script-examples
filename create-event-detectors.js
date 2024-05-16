@@ -7,6 +7,8 @@
  *  named event-detectors-to-create.csv with the following structure: 
  * dataPointId,dataPointXid,detectorType,detectorName,alarmLevel,limit,stateValues,stateInverted,duration,duration_unit,handlers_to_link,dataPointName,dataPointType,any,other,column,can,be,present,but,will be,ignored
  * 
+ * There's a sample MySQL query at the bottom of this script that can be used in the Mango SQL Console to generate a properly formatted CSV file.
+ * 
  * This script will:
  *  1. Get and Validate headers in the CSV file
  *  2. Confirm the detectorType is correct
@@ -45,7 +47,6 @@
 const enableConsoleLog = true;
 const handlersLinkDelimiter = ';'
 
-
 const fileName = 'event-detectors-to-create.csv';
 const fileStorePath = 'default';
 
@@ -58,8 +59,6 @@ const dataPointService = services.dataPointService;
 const eventHandlerService = services.eventHandlerService;
 const EventHandlerDao = Java.type('com.serotonin.m2m2.db.dao.EventHandlerDao');
 const ArrayList = Java.type('java.util.ArrayList');
-
-
 
 const mainHeaders = [];
 mainHeaders.push("dataPointId", "dataPointXid", "detectorType", "detectorName", "alarmLevel", "limit", "stateValues", "stateInverted", "duration", "durationType", "handlers_to_link", "dataPointName", "dataPointType");
@@ -114,7 +113,7 @@ function assureNotEmpty(name, value) {
     return;
 }
 
-const isTypeSupported = (type) => {
+function isTypeSupported(type) {
     switch (type) {
         case "HIGH_LIMIT":
         case "LOW_LIMIT":
@@ -130,7 +129,7 @@ const isTypeSupported = (type) => {
     }
 }
 
-const verbose = (logMessage) => {
+function verbose(logMessage) {
     if (!enableConsoleLog) return;
     else console.log(logMessage);
 }
@@ -159,27 +158,6 @@ for (const eventDetectorCsv of eventDetectorsArray) {
     */
 
     //Validations
-    /*
-    //Why are we checking every value and failing if any of them are missing?
-    //Not every value is required for each detector.
-    //Limit detectors don't require state values
-    //State detectors don't require limit values
-    try {
-        for (const [key, value] of Object.entries(eventDetectorCsv)) {
-            if (mainHeaders.includes(key)) {
-                assureNotEmpty(key, value);
-            }
-        }
-
-    } catch (error) {
-        log.error('Will not create new Event Detector. {} ', error.message);
-        verbose(error.message);
-        failed++;
-        insertED = false;
-        continue;
-    }
-    */
-    
     try {
         assureNotEmpty('detectorName', eventDetectorCsv.detectorName);
         verbose(`VALIDATED: ${eventDetectorCsv.detectorName}`);
