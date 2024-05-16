@@ -1,9 +1,10 @@
 /**
  * Create a group of event detectors
- * Was tested MANGO 4.5.X and MANGO 5.0.X
+ * Was tested MANGO 4.5.X and MANGO 5.0.X and MANGO 5.1.X
  * Last update May 2024
  * 
- * The create_event_detectors.js script requires a CSV file to be present in the filestore named event-detectors-to-create.csv with the following structure: 
+ * The create_event_detectors.js script requires a CSV file to be present in the filestore 
+ *  named event-detectors-to-create.csv with the following structure: 
  * dataPointId,dataPointXid,detectorType,detectorName,alarmLevel,limit,stateValues,stateInverted,duration,duration_unit,handlers_to_link,dataPointName,dataPointType,any,other,column,can,be,present,but,will be,ignored
  * 
  * This script will:
@@ -501,8 +502,13 @@ for (const eventDetectorCsv of eventDetectorsArray) {
                 continue;
             }
     
-            // reload the data point so it picks up its new event detectors
-            dataPointService.reloadDataPoint(point.getId());
+            //Reload the data point so it picks up its new event detectors
+            //This is not required as of Mango 5.1, and this method no longer
+            //exists within the dataPointService
+            if (dataPointService.reloadDataPoint) {
+                verbose(`Reloading datapoint with ID: ${point.getId()}`);
+                dataPointService.reloadDataPoint(point.getId());
+            }
 
             if (count % 10 == 0) {
                 verbose(`Created ${count} event detectors out of ${eventDetectorsArray.length}`);
