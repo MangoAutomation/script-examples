@@ -118,26 +118,66 @@ for (const eventDetectorCsv of eventDetectorsArray) {
 console.log(`Finished deleting ${count} out of ${eventDetectorsArray.length} event detectors with ${failed} errors`);
 
 /*
-Example to create the CSV file from an SQL query
-SELECT eD.id as eventDetectorId, eD.xid as eventDetectorXid, 
-    dP.id as dataPointId, dP.xid as dataPointXid, 
-    eD.sourceTypeName as detectorsourceTypeName,  eD.TypeName as detectorTypeName, 
-    '' as `limit`, '' as alarmLevel, 
-    dP.name as dataPointName, dS.id as dataSourceId,
-    dS.xid as dataSourceXid, dS.name as dataSourceName, dS.dataSourceType,
+Example to create the CSV file from an SQL query for Mysql/MariaDB database
+
+ SELECT eD.id as eventDetectorId,
+    eD.xid as eventDetectorXid,
+    dP.id as dataPointId,
+    dP.xid as dataPointXid,
+    eD.sourceTypeName as detectorSourceTypeName,
+    eD.TypeName as detectorTypeName,
+    '' as `limit`,
+    '' as alarmLevel,
+    dP.name as dataPointName,
+    dS.id as dataSourceId,
+    dS.xid as dataSourceXid,
+    dS.name as dataSourceName,
+    dS.dataSourceType,
     eD.data as detectorData
-FROM eventDetectors eD
-INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
-INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
-WHERE
+ FROM eventDetectors eD
+ INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
+ INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
+ WHERE
     (
         dS.id IN (63, 65, 69)
         OR
         dS.xid IN ('internal_mango_monitoring_ds')
     )
-AND
+ AND
     (
         dP.name LIKE 'JVM%'
+    );
+
+
+
+ -- Another example also for both databases(Mysql/MariaDB)
+
+ SELECT eD.id as eventDetectorId,
+    eD.xid as eventDetectorXid,
+    dP.id as dataPointId,
+    dP.xid as dataPointXid,
+    eD.sourceTypeName as detectorSourceTypeName,
+    eD.TypeName as detectorTypeName,
+    '' as `limit`,
+    '' as alarmLevel,
+    dP.name as dataPointName,
+    dS.id as dataSourceId,
+    dS.xid as dataSourceXid,
+    dS.name as dataSourceName,
+    dS.dataSourceType,
+    eD.data as detectorData
+ FROM eventDetectors eD
+ INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
+ INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
+ WHERE
+    (
+        dS.id IN (297390)
+        OR
+        dS.xid IN ('DS_df8c0162-9bce-4980-9160-7791d5d558aa')
+    )
+ AND
+    (
+        dP.name LIKE '%Voltage%'
     );
 
 */
