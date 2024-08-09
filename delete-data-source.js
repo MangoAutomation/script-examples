@@ -1,19 +1,30 @@
-// Delete a group of data sources read from a csv file of the form:
-// id,xid
+/* Delete a group of data sources read from a csv file of the form
+ * ID, XID
+ *
+ * Can be dounloaded from the SQL console using the query: select id, xid from datasources; 
+ * Note: You can add restrictions if you don't want all datasources.
+ * 
+ * Instructions: 
+ * 1. Run the query in the SQL console;
+ * 2. Save the file to the default File Store directory with name data-source-to-delete.csv.
+ * 3. Load and execute this script. 
+ *
+ * Note: Runs on mango 4.5.7+
+ */
 const Files = Java.type('java.nio.file.Files');
 
 function readCsv(fileStore, filePath) {
     const path = services.fileStoreService.getPathForRead(fileStore, filePath);
-    const lines = Files.readAllLines(path).toArray();
-    
-    const [headerLine, ...dataLines] = lines;
-    const header = headerLine.split(','); 
-    
+    const lines = Array.from(Files.readAllLines(path));
 
-    const data = dataLines.map(line => {
-        const values = line.split(',');
-        return header.reduce((accumulator, key, index) => {
-            accumulator[key] = values[index];
+    if (lines.length === 0) return [];
+    
+    const header = lines.shift().split(',').map(column => column.replace(/["]+/g, '').trim());
+
+    const data = lines.map(line => {
+        const row = line.split(',').map(value => value.replace(/["]+/g, '').trim());
+        return header.reduce((accumulator, column, index) => {
+            accumulator[column] = row[index];
             return accumulator;
         }, {});
     });
@@ -30,15 +41,15 @@ let failed = 0;
 for(const ds of dataSourceArray) {
     try {
         // Validations
-        dataSourceService.get(ds.xid);
-        dataSourceService.get(Number(ds.id));
+        dataSourceService.get(ds.XID);
+        dataSourceService.get(Number(ds.ID));
     
         // Delete datasource
-        dataSourceService.delete(ds.xid);
+        dataSourceService.delete(ds.XID);
         count++;
     } catch(error) {
-        console.log('Failed deleting data source', ds.xid, error.getMessage());
-        log.error('Failed deleting data source {}', ds.xid, error);
+        console.log('Failed deleting data source', ds.XID, error.getMessage());
+        log.error('Failed deleting data source {}', ds.XID, error);
         failed++;
     }
 
