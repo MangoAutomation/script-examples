@@ -513,7 +513,11 @@ const message = handlersLinkDelimiter === ',' ? `INVALID DELIMITER. Please use a
 console.log(message);
 
 /*
-SELECT DISTINCT dP.id as dataPointId, dP.xid as dataPointXid, 
+
+ -- The following SQL query is suggested to create the CSV file for Mysql or MariaDB databases
+
+ SELECT DISTINCT dP.id as dataPointId,
+    dP.xid as dataPointXid,
     '' as detectorType, 
     '' as detectorName, 
     '' as alarmLevel, 
@@ -522,20 +526,55 @@ SELECT DISTINCT dP.id as dataPointId, dP.xid as dataPointXid,
     '' as stateInverted,
     0 as duration,
     'SECONDS' as durationType,
-    '' as handlers_to_link, dP.name as dataPointName,
+    '' as handlers_to_link,
+    dP.name as dataPointName,
     REPLACE(REPLACE(REPLACE(REPLACE(dP.dataTypeId, '1', 'BINARY'),
-       '2', 'MULTISTATE'), '3', 'NUMERIC'), '4',
-       'ALPHANUMERIC') as dataPointType,
-    dS.id as dataSourceId, dS.xid as dataSourceXid,
-    dS.name as dataSourceName, dS.dataSourceType
-FROM dataPoints dP
-INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
-WHERE
+        '2', 'MULTISTATE'), '3', 'NUMERIC'), '4','ALPHANUMERIC') as dataPointType,
+    dS.id as dataSourceId,
+    dS.xid as dataSourceXid,
+    dS.name as dataSourceName,
+    dS.dataSourceType
+ FROM dataPoints dP
+ INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
+ WHERE
     (
         dS.xid IN ('DS_b3dfc7fa-416e-4650-b8de-b521ce288275')
     )
-AND
+ AND
     (
         dP.name LIKE 'onOffAlarmPoint%'
-    )
+    );
+
+
+ -- Another example also for both databases(Mysql/MariaDB)
+
+ SELECT DISTINCT dP.id as dataPointId,
+    dP.xid as dataPointXid,
+	'' as detectorType,
+	'' as detectorName,
+	'' as alarmLevel,
+	'' as `limit`,
+	'' as stateValues,
+	'' as stateInverted,
+	0 as duration,
+    'SECONDS' as durationType,
+	'' as handlers_to_link,
+	dP.name as dataPointName,
+	REPLACE(REPLACE(REPLACE(REPLACE(dP.dataTypeId, '1', 'BINARY'),
+	    '2', 'MULTISTATE'), '3', 'NUMERIC'),'4', 'ALPHANUMERIC') as dataPointType,
+	dS.id as dataSourceId,
+	dS.xid as dataSourceXid,
+	dS.name as dataSourceName,
+	dS.dataSourceType
+ FROM  dataPoints dP
+ INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
+ WHERE
+      (
+          dS.xid IN ('DS_df8c0162-9bce-4980-9160-7791d5d558aa')
+      )
+ AND
+      (
+          dP.name LIKE '%Voltage%'
+      );
+
 */

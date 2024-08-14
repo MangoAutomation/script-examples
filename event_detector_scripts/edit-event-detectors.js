@@ -422,16 +422,23 @@ const message = handlersLinkDelimiter === ',' ? `INVALID DELIMITER. Please use a
 console.log(message);
 
 /**
- Example to create the CSV file from an MySQL SQL query
-SELECT DISTINCT eD.id as eventDetectorId, eD.xid as eventDetectorXid, eD.typeName as detectorType,
-    '' as newDetectorName, '' as newAlarmLevel, '' as newLimit, '' as newStateValues,
+
+ -- Example to create the CSV file from an MySQL SQL query:
+
+ SELECT DISTINCT eD.id as eventDetectorId,
+    eD.xid as eventDetectorXid,
+    eD.typeName as detectorType,
+    '' as newDetectorName,
+    '' as newAlarmLevel,
+    '' as newLimit,
+    '' as newStateValues,
     '' as newStateInverted,
     '' as newDuration,
     '' as newDurationType,
     '' as handlers_to_link,
     '' as handlers_to_remove,
-    REPLACE(REPLACE(REPLACE(REPLACE(dP.dataTypeId, '1', 'BINARY'), '2', 'MULTISTATE'), '3',
-        'NUMERIC'), '4','ALPHANUMERIC') as dataPointType,
+    REPLACE(REPLACE(REPLACE(REPLACE(dP.dataTypeId, '1','BINARY'),
+        '2', 'MULTISTATE'), '3','NUMERIC'), '4','ALPHANUMERIC') as dataPointType,
     eD.data->>'$.name' as existingName,
     eD.data->>'$.alarmLevel' as existingAlarmLevel,
     eD.data->>'$.limit' as existingLimit,
@@ -441,35 +448,103 @@ SELECT DISTINCT eD.id as eventDetectorId, eD.xid as eventDetectorXid, eD.typeNam
         WHEN eD.data->>'$.states' = 'null' THEN eD.data->>'$.state'
         ELSE REPLACE(REPLACE(REPLACE(eD.data->>'$.states', '[', ''), ']', ''), ',', ';')
     END as existingStateValues,
-    eD.data->>'$.inverted' as existingStateInverted, dP.name as dataPointName,
+    eD.data->>'$.inverted' as existingStateInverted,
+    dP.name as dataPointName,
     eD.data->>'$.sourceType' as detectorSourceType,
-    dP.id as dataPointId, dP.xid as dataPointXid, dS.id as dataSourceId, dS.xid as dataSourceXid,
-    dS.name as dataSourceName, dS.dataSourceType
-FROM eventDetectors eD
-INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
-INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
-WHERE
+    dP.id as dataPointId,
+    dP.xid as dataPointXid,
+    dS.id as dataSourceId,
+    dS.xid as dataSourceXid,
+    dS.name as dataSourceName,
+    dS.dataSourceType
+ FROM eventDetectors eD
+ INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
+ INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
+ WHERE
     (
         eD.data->>'$.sourceType' IN ('DATA_POINT')
     )
-AND
+ AND
     (
         dS.id IN (63, 65, 69)
         OR
         dS.xid IN ('DS_b3dfc7fa-416e-4650-b8de-b521ce288275')
     )
-AND
+ AND
     (
         eD.typeName IN ('HIGH_LIMIT', 'LOW_LIMIT', 'BINARY_STATE', 'MULTISTATE_STATE')
     )
-AND
+ AND
     (
         dP.name LIKE 'onOffAlarmPoint%'
     )
-AND
+ AND
     (
         eD.data->>'$.name' LIKE 'Weather%'
         OR
         eD.data->>'$.name' LIKE 'weather%'
+    );
+
+ -- Example SQL query to create the CSV file on MariaDB:
+
+ SELECT DISTINCT eD.id as eventDetectorId,
+    eD.xid as eventDetectorXid,
+    eD.typeName as detectorType,
+    '' as newDetectorName,
+    '' as newAlarmLevel,
+    '' as newLimit,
+    '' as newStateValues,
+    '' as newStateInverted,
+    '' as newDuration,
+    '' as newDurationType,
+    '' as handlers_to_link,
+    '' as handlers_to_remove,
+    REPLACE(REPLACE(REPLACE(REPLACE(dP.dataTypeId,'1', 'BINARY'),
+        '2', 'MULTISTATE'),'3', 'NUMERIC'),'4', 'ALPHANUMERIC') as dataPointType,
+    JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.name')) as existingName,
+    JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.alarmLevel')) as existingAlarmLevel,
+    JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.limit')) as existingLimit,
+    JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.duration')) as existingDuration,
+    CASE
+        WHEN (JSON_EXTRACT(eD.data, '$.states') is null or JSON_EXTRACT(eD.data, '$.states') = 'null')
+            THEN JSON_EXTRACT(eD.data, '$.state')
+        ELSE REPLACE(REPLACE(REPLACE(JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.states')), '[', ''), ']', ''), ',', ';')
+    END as existingStateValues,
+    JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.inverted')) as existingStateInverted,
+    dP.name as dataPointName,
+    JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.sourceType')) as detectorSourceType,
+    dP.id as dataPointId,
+    dP.xid as dataPointXid,
+    dS.id as dataSourceId,
+    dS.xid as dataSourceXid,
+    dS.name as dataSourceName,
+    dS.dataSourceType
+ FROM eventDetectors eD
+ INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
+ INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
+ WHERE
+    (
+        JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.sourceType')) IN ('DATA_POINT')
     )
+ AND
+    (
+        dS.id IN (11)
+        OR
+        dS.xid IN ('DS_df8c0162-9bce-4980-9160-7791d5d558aa')
+    )
+ AND
+    (
+        eD.typeName IN ('MULTISTATE_STATE')
+    )
+ AND
+    (
+        dP.name LIKE '%Voltage%'
+    )
+ AND
+    (
+        JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.name')) LIKE 'Output%'
+        OR
+        JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.name')) LIKE '%Low'
+    );
+
  */
