@@ -18,7 +18,7 @@
  *        Fail on a mismatch
  *        Fail if some other type of detector that is not supported
  *
- *     4. Set the new DetectorName, Limit, State Value(s), Duration, and/or AlarmLevel values as needed    
+ *     4. Set the new DetectorName, Limit, State Value(s), Duration, and/or AlarmLevel values as needed
  *        If any of the new* columns are blank or set to EMPTY, that value will be left unchanged
  *     
  *      NOTE: "EMPTY" is not a valid name for an event detector using this script as it is a reserved keyword
