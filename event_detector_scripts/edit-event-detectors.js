@@ -17,6 +17,7 @@
  *        UPDATE
  *        Fail on a mismatch
  *        Fail if some other type of detector that is not supported
+ *
  *     4. Set the new DetectorName, Limit, State Value(s), Duration, and/or AlarmLevel values as needed    
  *        If any of the new* columns are blank or set to EMPTY, that value will be left unchanged
  *     
@@ -29,7 +30,20 @@
  *  Verbose logging may impact the performance if the script is updating a large number of event detectors
  * 
  *  Set handlersLinkDelimiter to the delimiter used in handlers_to_link or handlers_to_remove. It cannot be a comma as this will break the CSV file format
- * 
+ *
+ *  ==== ALARM LEVELS ====
+ *
+ *   NONE
+ *   INFORMATION
+ *   IMPORTANT
+ *   WARNING
+ *   URGENT
+ *   CRITICAL
+ *   LIFE_SAFETY
+ *   DO_NOT_LOG
+ *   IGNORE
+ *
+ *  ===================================
  *
  *  ==== DURATION TYPE CONVENTIONS ====
  *   SECONDS = 1;
@@ -423,7 +437,7 @@ console.log(message);
 
 /**
 
- -- Example to create the CSV file from an MySQL SQL query:
+ -- Example to create the CSV file from MySQL SQL query:
 
  SELECT DISTINCT eD.id as eventDetectorId,
     eD.xid as eventDetectorXid,
@@ -483,9 +497,13 @@ console.log(message);
         eD.data->>'$.name' LIKE 'Weather%'
         OR
         eD.data->>'$.name' LIKE 'weather%'
+    )
+ AND
+    (
+        dp.JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.alarmLevel')) IN ('NONE', 'INFORMATION', 'IMPORTANT', 'WARNING', 'URGENT', 'CRITICAL', 'LIFE_SAFETY', 'DO_NOT_LOG', 'IGNORE')
     );
 
- -- Example SQL query to create the CSV file on MariaDB:
+ -- Example SQL query to create the CSV file for MariaDB:
 
  SELECT DISTINCT eD.id as eventDetectorId,
     eD.xid as eventDetectorXid,
@@ -545,6 +563,132 @@ console.log(message);
         JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.name')) LIKE 'Output%'
         OR
         JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.name')) LIKE '%Low'
+    )
+ AND
+    (
+        dp.JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.alarmLevel')) IN ('NONE', 'INFORMATION', 'IMPORTANT', 'WARNING', 'URGENT', 'CRITICAL', 'LIFE_SAFETY', 'DO_NOT_LOG', 'IGNORE')
     );
+
+ -- Example SQL query to create the CSV file for H2DB:
+
+ SELECT DISTINCT eD.id as eventDetectorId,
+    eD.xid as eventDetectorXid,
+    eD.typeName as detectorType,
+    '' as newDetectorName,
+    '' as newAlarmLevel,
+    '' as newLimit,
+    '' as newStateValues,
+    '' as newStateInverted,
+    '' as newDuration,
+    '' as newDurationType,
+    '' as handlers_to_link,
+    '' as handlers_to_remove,
+    REPLACE(REPLACE(REPLACE(REPLACE(dP.dataTypeId,'1', 'BINARY'),
+        '2', 'MULTISTATE'),'3', 'NUMERIC'),'4', 'ALPHANUMERIC') as dataPointType,
+    REPLACE(
+        REPLACE(
+            REGEXP_SUBSTR(eD.data,'"name"(\s*?:{1}\s*?)"(.*?)"'),
+                '"name":"', ''),
+                    '"', '') AS existingName,
+    REPLACE(
+        REPLACE(
+            REGEXP_SUBSTR(eD.data,'"alarmLevel"(\s*?:{1}\s*?)"(.*?)"'),
+                '"alarmLevel":"', ''),
+                    '"', '') AS existingAlarmLevel,
+    REPLACE(
+        REPLACE(
+            REGEXP_SUBSTR(eD.data,'"limit"(\s*?:{1}\s*?)"(.*?)"'),
+                '"limit":"', ''),
+                    '"', '') AS existingLimit,
+    REPLACE(
+        REPLACE(
+            REGEXP_SUBSTR(eD.data,'"duration"(\s*?:{1}\s*?)(.*?),'),
+                '"duration":', ''),
+                    ',', '') AS existingDuration,
+    CASEWHEN(
+        REPLACE(
+            REPLACE(
+                REGEXP_SUBSTR(eD.data,'"states"(\s*?:{1}\s*?)(.*?),'),
+                    '"states":', ''),
+                        ',', '') = 'null',
+        REPLACE(
+            REPLACE(
+                REGEXP_SUBSTR(eD.data,'"state"(\s*?:{1}\s*?)(.*?),'),
+                    '"state":', ''),
+                        ',', ''),
+        REPLACE(
+            REPLACE(
+                REPLACE(
+                    REGEXP_SUBSTR(eD.data,'"states"(\s*?:{1}\s*?)(.*?)]'),
+                        '"states":[', ''),
+                            ']', ''),
+                                ',', ';')
+    ) as existingStateValues,
+    REPLACE(
+        REPLACE(
+            REGEXP_SUBSTR(eD.data,'"inverted"(\s*?:{1}\s*?)(.*?),'),
+                '"inverted":', ''),
+                    ',', '') AS existingStateInverted,
+    dP.name as dataPointName,
+    REPLACE(
+        REPLACE(
+            REGEXP_SUBSTR(eD.data,'"sourceType"(\s*?:"{1}\s*?)(.*?)"'),
+                '"sourceType":"', ''),
+                    '"', '') AS detectorSourceType,
+    dP.id as dataPointId,
+    dP.xid as dataPointXid,
+    dS.id as dataSourceId,
+    dS.xid as dataSourceXid,
+    dS.name as dataSourceName,
+    dS.dataSourceType
+    FROM eventDetectors eD
+ INNER JOIN dataPoints dP ON eD.dataPointId = dP.id
+ INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
+ WHERE
+    (
+        REPLACE(
+            REPLACE(
+                REGEXP_SUBSTR(eD.data,'"sourceType"(\s*?:"{1}\s*?)(.*?)"'),
+                    '"sourceType":"', ''),
+                        '"', '') IN ('DATA_POINT')
+    )
+ AND
+    (
+        dS.id IN (11)
+        OR
+        dS.xid IN ('DS_df8c0162-9bce-4980-9160-7791d5d558aa')
+    )
+ AND
+    (
+        eD.typeName IN ('MULTISTATE_STATE')
+    )
+ AND
+    (
+        dP.name LIKE '%Voltage%'
+    )
+ AND
+    (
+        REPLACE(
+            REPLACE(
+                REGEXP_SUBSTR(eD.data,'"name"(\s*?:"{1}\s*?)(.*?)"'),
+                    '"name":"', ''),
+                        '"', '') LIKE 'Output%'
+        OR
+        REPLACE(
+            REPLACE(
+                REGEXP_SUBSTR(eD.data,'"name"(\s*?:"{1}\s*?)(.*?)"'),
+                    '"name":"', ''),
+                        '"', '') LIKE '%Low'
+    )
+ AND
+    (
+        REPLACE(
+            REPLACE(
+                REGEXP_SUBSTR(eD.data,'"alarmLevel"(\s*?:"{1}\s*?)(.*?)"'),
+                    '"alarmLevel":"', ''),
+                        '"', '') IN ('NONE', 'INFORMATION',
+                                    'IMPORTANT', 'WARNING', 'URGENT', 'CRITICAL',
+                                    'LIFE_SAFETY', 'DO_NOT_LOG', 'IGNORE')
+ );
 
  */

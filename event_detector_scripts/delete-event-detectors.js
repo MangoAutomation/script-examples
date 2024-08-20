@@ -118,7 +118,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
 console.log(`Finished deleting ${count} out of ${eventDetectorsArray.length} event detectors with ${failed} errors`);
 
 /*
-Example to create the CSV file from an SQL query for Mysql/MariaDB database
+Example to create the CSV file from an SQL query for Mysql/MariaDB and H2DB
 
  SELECT eD.id as eventDetectorId,
     eD.xid as eventDetectorXid,
@@ -150,7 +150,7 @@ Example to create the CSV file from an SQL query for Mysql/MariaDB database
 
 
 
- -- Another example also for both databases(Mysql/MariaDB)
+ -- Another example also for Mysql/MariaDB and H2DB
 
  SELECT eD.id as eventDetectorId,
     eD.xid as eventDetectorXid,
