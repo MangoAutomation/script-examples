@@ -212,7 +212,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
         if (changeProperty(eventDetectorCsv.newDurationType)) {
             try {
                 if (![1, 2, 3, 4].includes(Number.parseInt(eventDetectorCsv.newDurationType))) {
-                    throw new Error(`Duration type ${type}: Not Supported. Expected 1, 2, 3, or 4.`)
+                    throw new Error(`Duration type ${eventDetectorCsv.newDurationType}: Not Supported. Expected 1, 2, 3, or 4.`)
                 }
                 detector.setDurationType(Number.parseInt(eventDetectorCsv.newDurationType))
                 verbose(`Detector Name: ${detector.getName()} change duration type ${eventDetectorCsv.newDurationType}`);
