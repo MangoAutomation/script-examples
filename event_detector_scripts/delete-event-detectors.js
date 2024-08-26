@@ -92,7 +92,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
         failed++;
         continue;
     }
-    
+
     //Confirm the event detector XID exists
     verbose(eventDetectorCsv.eventDetectorXid);
     try {
