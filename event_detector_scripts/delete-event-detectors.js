@@ -18,7 +18,7 @@
 const enableConsoleLog = true;
 const fileName = 'event-detectors-to-delete.csv';
 const fileStorePath = 'default';
-
+const RESERVED_EMPTY = "EMPTY";
 
 const Files = Java.type('java.nio.file.Files');
 const mainHeaders = [];
@@ -50,14 +50,15 @@ function readCsv(fileStore, filePath) {
     return lines;
 }
 
-function assureNotEmpty(name, value) {
-    if (!value) {
-        throw new Error(`Missing required value: ${name}. Validation failed.`);
+function changeProperty(curProperty) {
+    //Determine if the current proeprty in the CSV file is a blank cell, is set to the reserved keyword EMPTY, or
+    //contains a useful value that should be processed
+    if (curProperty && curProperty != RESERVED_EMPTY) {
+        return true;
     }
-    else if (value == RESERVED_EMPTY) {
-        throw new Error(`Missing required value: ${name}. Value set to ${RESERVED_EMPTY}. Validation failed.`);
+    else {
+        return false;
     }
-    return;
 }
 
 const verbose = (logMessage) => {
@@ -74,34 +75,38 @@ let count = 0;
 let failed = 0;
 for (const eventDetectorCsv of eventDetectorsArray) {
 
-    //validations
-    try {
-        for (const [key, value] of Object.entries(eventDetectorCsv)) {
-            if (mainHeaders.includes(key)) {
-                assureNotEmpty(key, value);
-            }
-        }
+    let detector;
 
-    } catch (error) {
-        log.error('Will not create new Event Detector. {} ', error.message);
-        verbose(error.message);
+    //VALIDATIONS
+
+    //Confirm the ID and XID values in the CSV are set
+    if (!changeProperty(eventDetectorCsv.eventDetectorId)) {
+        log.error('Event detector ID not provided. CSV contains: {}', eventDetectorCsv.eventDetectorId);
+        verbose(`Event detector ID not provided. CSV contains: ${eventDetectorCsv.eventDetectorId}`);
         failed++;
         continue;
     }
-
-    let detector;
+    if (!changeProperty(eventDetectorCsv.eventDetectorXid)) {
+        log.error('Event detector XID not provided. CSV contains: {}', eventDetectorCsv.eventDetectorXid);
+        verbose(`Event detector XID not provided. CSV contains: ${eventDetectorCsv.eventDetectorXid}`);
+        failed++;
+        continue;
+    }
+    
+    //Confirm the event detector XID exists
+    verbose(eventDetectorCsv.eventDetectorXid);
     try {
         detector = eventDetectorsService.get(eventDetectorCsv.eventDetectorXid);
     } catch (e) {
-        log.error('Failed deleting the event detector with XID {} NOT FOUND!', eventDetectorCsv.eventDetectorXid);
-        verbose(`'Failed deleting the event detector with XID ${eventDetectorCsv.eventDetectorXid} NOT FOUND!'`);
+        log.error('Failed finding the event detector with XID {}: {}', eventDetectorCsv.eventDetectorXid, e);
+        verbose(`Failed finding the event detector with XID ${eventDetectorCsv.eventDetectorXid}: ${e}`);
         failed++;
         continue;
     }
 
     try {
         compare(detector.getId(), eventDetectorCsv.eventDetectorId, "eventDetectorId MISMATCH");
-        verbose(`Deleting event detector ${detector.getName()} with id: ${detector.getId()}`);
+        verbose(`VALIDATED: Deleting event detector ${detector.getName()} with id: ${detector.getId()}`);
         eventDetectorsService.delete(detector);
         count++;
     } catch (e) {
