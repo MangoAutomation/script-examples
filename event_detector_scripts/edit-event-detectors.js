@@ -500,7 +500,7 @@ console.log(message);
     )
  AND
     (
-        dp.JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.alarmLevel')) IN ('NONE', 'INFORMATION', 'IMPORTANT', 'WARNING', 'URGENT', 'CRITICAL', 'LIFE_SAFETY', 'DO_NOT_LOG', 'IGNORE')
+        eD.data->>'$.alarmLevel' IN ('NONE', 'INFORMATION', 'IMPORTANT', 'WARNING', 'URGENT', 'CRITICAL', 'LIFE_SAFETY', 'DO_NOT_LOG', 'IGNORE')
     );
 
  -- Example SQL query to create the CSV file for MariaDB:
@@ -523,6 +523,7 @@ console.log(message);
     JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.alarmLevel')) as existingAlarmLevel,
     JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.limit')) as existingLimit,
     JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.duration')) as existingDuration,
+    REPLACE(REPLACE(REPLACE(REPLACE(JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.durationType')),'SECONDS',1),'MINUTES',2),'HOURS',3),'DAYS',4) as existingDurationType,
     CASE
         WHEN (JSON_EXTRACT(eD.data, '$.states') is null or JSON_EXTRACT(eD.data, '$.states') = 'null')
             THEN JSON_EXTRACT(eD.data, '$.state')

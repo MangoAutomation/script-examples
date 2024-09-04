@@ -528,7 +528,7 @@ console.log(message);
 
 /*
 
- -- The following SQL query is suggested to create the CSV file for Mysql and MariaDB
+ -- The following SQL query is suggested to create the CSV file for Mysql
 
  SELECT DISTINCT dP.id as dataPointId,
     dP.xid as dataPointXid,
@@ -560,11 +560,11 @@ console.log(message);
     )
  AND
     (
-        dp.JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.alarmLevel')) IN ('NONE', 'INFORMATION', 'IMPORTANT', 'WARNING', 'URGENT', 'CRITICAL', 'LIFE_SAFETY', 'DO_NOT_LOG', 'IGNORE')
+        eD.data->>'$.alarmLevel' IN ('NONE', 'INFORMATION', 'IMPORTANT', 'WARNING', 'URGENT', 'CRITICAL', 'LIFE_SAFETY', 'DO_NOT_LOG', 'IGNORE')
     );
 
 
- -- Another example also for Mysql and MariaDB
+ -- Another example also for MariaDB
 
  SELECT DISTINCT dP.id as dataPointId,
     dP.xid as dataPointXid,
