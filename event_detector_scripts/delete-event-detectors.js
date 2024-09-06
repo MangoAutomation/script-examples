@@ -105,7 +105,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
     }
 
     try {
-        compare(detector.getId(), eventDetectorCsv.eventDetectorId, "eventDetectorId MISMATCH");
+        compare(detector.getId(), Number(eventDetectorCsv.eventDetectorId), "eventDetectorId MISMATCH");
         verbose(`VALIDATED: Deleting event detector ${detector.getName()} with id: ${detector.getId()}`);
         eventDetectorsService.delete(detector);
         count++;
