@@ -24,7 +24,21 @@
  *  4. Set the detectorType DetectorName, Limit, and/or AlarmLevel values as needed
  *  5. Link the detector to one or more event handler (by event handler XID)
  *  6. Insert the event detector. 
- * 
+ *
+ *  ==== ALARM LEVELS ====
+ *
+ *   NONE
+ *   INFORMATION
+ *   IMPORTANT
+ *   WARNING
+ *   URGENT
+ *   CRITICAL
+ *   LIFE_SAFETY
+ *   DO_NOT_LOG
+ *   IGNORE
+ *
+ *  ===================================
+ *
  *  ==== DURATION UNITS CONVENTIONS ====
  *  SECONDS = 1;
  *  MINUTES = 2;
@@ -514,7 +528,7 @@ console.log(message);
 
 /*
 
- -- The following SQL query is suggested to create the CSV file for Mysql or MariaDB databases
+ -- The following SQL query is suggested to create the CSV file for Mysql
 
  SELECT DISTINCT dP.id as dataPointId,
     dP.xid as dataPointXid,
@@ -543,10 +557,14 @@ console.log(message);
  AND
     (
         dP.name LIKE 'onOffAlarmPoint%'
+    )
+ AND
+    (
+        eD.data->>'$.alarmLevel' IN ('NONE', 'INFORMATION', 'IMPORTANT', 'WARNING', 'URGENT', 'CRITICAL', 'LIFE_SAFETY', 'DO_NOT_LOG', 'IGNORE')
     );
 
 
- -- Another example also for both databases(Mysql/MariaDB)
+ -- Another example also for MariaDB
 
  SELECT DISTINCT dP.id as dataPointId,
     dP.xid as dataPointXid,
@@ -575,6 +593,52 @@ console.log(message);
  AND
       (
           dP.name LIKE '%Voltage%'
+      )
+ AND
+      (
+          dp.JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.alarmLevel')) IN ('NONE', 'INFORMATION', 'IMPORTANT', 'WARNING', 'URGENT', 'CRITICAL', 'LIFE_SAFETY', 'DO_NOT_LOG', 'IGNORE')
       );
+
+
+ -- Example SQL query to create the CSV file for H2DB
+
+ SELECT DISTINCT dP.id as dataPointId,
+    dP.xid as dataPointXid,
+    '' as detectorType,
+    '' as detectorName,
+    '' as alarmLevel,
+    '' as `limit`,
+    '' as stateValues,
+    '' as stateInverted,
+    0 as duration,
+    'SECONDS' as durationType,
+    '' as handlers_to_link,
+    dP.name as dataPointName,
+    REPLACE(REPLACE(REPLACE(REPLACE(dP.dataTypeId, '1', 'BINARY'),
+        '2', 'MULTISTATE'), '3', 'NUMERIC'),'4', 'ALPHANUMERIC') as dataPointType,
+    dS.id as dataSourceId,
+    dS.xid as dataSourceXid,
+    dS.name as dataSourceName,
+    dS.dataSourceType
+ FROM  dataPoints dP
+ INNER JOIN dataSources dS ON dP.dataSourceId = dS.id
+ WHERE
+    (
+        dS.xid IN ('DS_df8c0162-9bce-4980-9160-7791d5d558aa')
+    )
+ AND
+    (
+        dP.name LIKE '%Voltage%'
+    )
+ AND
+    (
+        REPLACE(
+            REPLACE(
+                REGEXP_SUBSTR(dP.name,'"alarmLevel"(\s*?:"{1}\s*?)(.*?)"'),
+                    '"alarmLevel":"', ''),
+                        '"', '') IN ('NONE', 'INFORMATION', 'IMPORTANT',
+                                    'WARNING', 'URGENT', 'CRITICAL',
+                                    'LIFE_SAFETY', 'DO_NOT_LOG', 'IGNORE')
+    );
 
 */
