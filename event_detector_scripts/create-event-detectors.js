@@ -1,7 +1,7 @@
 /**
  * Create a group of event detectors
  * Was tested MANGO 4.5.X and MANGO 5.0.X and MANGO 5.1.X
- * Last update May 2024
+ * Last update Sep 2024
  * 
  * The create_event_detectors.js script requires a CSV file to be present in the filestore 
  *  named event-detectors-to-create.csv with the following structure: 
