@@ -1,5 +1,5 @@
 /* Delete a group of event detectors
- * Updated May 2024
+ * Updated Sep 2024
  * The delete-event-detectors.js script requires a CSV file be present in the filestore 
  * named event-detectors-to-delete.csv with the following structure: 
  * eventDetectorId, eventDetectorXid, any, other, column, can, be, present, but, will, be, ignored
@@ -92,7 +92,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
         failed++;
         continue;
     }
-    
+
     //Confirm the event detector XID exists
     verbose(eventDetectorCsv.eventDetectorXid);
     try {

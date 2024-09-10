@@ -1,6 +1,6 @@
 /* Edit a group of event detectors
  * Tested on MANGO 4.5.x & Mango 5.0.X
- * Last update May 2024
+ * Last update Sep 2024
  * The edit-event-detectors.js script requires a CSV file to be present in the filestore 
  * named event-detectors-to-edit.csv with the following structure: 
  * eventDetectorId, eventDetectorXid, detectorType, newDetectorName, newAlarmLevel, newLimit, newStateValues, newStateInverted, newDuration, newDurationType, handlers_to_link, handlers_to_remove, dataPointType, any, other, column, can, be, present, but, will, be, ignored
@@ -18,7 +18,7 @@
  *        Fail on a mismatch
  *        Fail if some other type of detector that is not supported
  *
- *     4. Set the new DetectorName, Limit, State Value(s), Duration, and/or AlarmLevel values as needed    
+ *     4. Set the new DetectorName, Limit, State Value(s), Duration, and/or AlarmLevel values as needed
  *        If any of the new* columns are blank or set to EMPTY, that value will be left unchanged
  *     
  *      NOTE: "EMPTY" is not a valid name for an event detector using this script as it is a reserved keyword
