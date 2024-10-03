@@ -396,6 +396,10 @@ for (const eventDetectorCsv of eventDetectorsArray) {
             try {
                 assureNotEmpty('resetLimit', eventDetectorCsv.resetLimit);
                 if (Number.isNaN(Number.parseFloat(eventDetectorCsv.resetLimit))) {
+                    log.error('resetLimit {}: Not Supported!', eventDetectorCsv.resetLimit);
+                    verbose(`resetLimit ${eventDetectorCsv.resetLimit}: Not Supported!`);
+                    insertED = false;
+                    failed++;
                     throw new Error(`resetLimit ${eventDetectorCsv.resetLimit}: Not Supported!`)
                 }
                 else
@@ -422,8 +426,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
     let hasHighRangeLimit = false;
     //Validate RANGE detectors
     if (eventDetectorCsv.detectorType === 'RANGE') {
-        // TODO confirm that
-        //Do not allow MULTISTATE or BINARY points to use LIMIT detectors
+        //Do not allow MULTISTATE or BINARY points to use RANGE detectors
         if (['MULTISTATE', 'BINARY'].includes(eventDetectorCsv.dataPointType)) {
             //This type of point cannot use this type of detector
             log.error(`Detector Type ${eventDetectorCsv.detectorType} not supported for Point Type ${eventDetectorCsv.dataPointType} on Point XID ${eventDetectorCsv.dataPointXid}.`);
@@ -656,9 +659,9 @@ console.log(message);
     '' as alarmLevel, 
     '' as `limit`,
     '' as `resetLimit`,
-	  '' as `lowRangeLimit`,
-	  '' as `highRangeLimit`,
-	  '' as `withinRange`,
+    '' as `lowRangeLimit`,
+    '' as `highRangeLimit`,
+    '' as `withinRange`,
     '' as stateValues, 
     '' as stateInverted,
     0 as duration,
@@ -736,9 +739,9 @@ console.log(message);
     '' as alarmLevel,
     '' as `limit`,
     '' as `resetLimit`,
-	  '' as `lowRangeLimit`,
-	  '' as `highRangeLimit`,
-	  '' as `withinRange`,
+    '' as `lowRangeLimit`,
+    '' as `highRangeLimit`,
+    '' as `withinRange`,
     '' as stateValues,
     '' as stateInverted,
     0 as duration,

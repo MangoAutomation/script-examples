@@ -1,9 +1,9 @@
 /* Edit a group of event detectors
  * Tested on MANGO 4.5.x & Mango 5.0.X
- * Last update Sep 2024
+ * Last update Oct 2024
  * The edit-event-detectors.js script requires a CSV file to be present in the filestore 
  * named event-detectors-to-edit.csv with the following structure: 
- * eventDetectorId, eventDetectorXid, detectorType, newDetectorName, newAlarmLevel, newLimit, newStateValues, newStateInverted, newDuration, newDurationType, handlers_to_link, handlers_to_remove, dataPointType, any, other, column, can, be, present, but, will, be, ignored
+ * eventDetectorId, eventDetectorXid, detectorType, newDetectorName, newAlarmLevel, newLimit, newResetLimit, newUseResetLimit, newLowRangeLimit, newHighRangeLimit, newWithinRange, newStateValues, newStateInverted, newDuration, newDurationType, handlers_to_link, handlers_to_remove, dataPointType, any, other, column, can, be, present, but, will, be, ignored
  * 
  * This script will:
  *     1. Locate the event detector that matches the eventDetectorXid provided
@@ -15,6 +15,8 @@
  *        BINARY_STATE
  *        NO_UPDATE
  *        UPDATE
+ *        POINT_CHANGE
+ *        RANGE
  *        Fail on a mismatch
  *        Fail if some other type of detector that is not supported
  *
@@ -65,7 +67,7 @@ const AlarmLevels = Java.type('com.serotonin.m2m2.rt.event.AlarmLevels');
 const eventHandlerService = services.eventHandlerService;
 const mainHeaders = [];
 
-mainHeaders.push("eventDetectorId", "eventDetectorXid", "detectorType", "newDetectorName", "newAlarmLevel", "newLimit", "newStateValues", "newStateInverted", "newDuration", "newDurationType", "handlers_to_link", "handlers_to_remove", "dataPointType");
+mainHeaders.push("eventDetectorId", "eventDetectorXid", "detectorType", "newDetectorName", "newAlarmLevel", "newLimit", "newResetLimit", "newUseResetLimit", "newLowRangeLimit", "newHighRangeLimit", "newWithinRange", "newStateValues", "newStateInverted", "newDuration", "newDurationType", "handlers_to_link", "handlers_to_remove", "dataPointType");
 
 function compare(actual, expected, message) {
     if (actual === expected) return
@@ -81,6 +83,19 @@ function changeProperty(curProperty) {
     else {
         return false;
     }
+}
+
+function stringToBoolean(str) {
+    if (str === "true") return true;
+    else if (str === "false") return false;
+    else throw new Error("Invalid input: must be 'true' or 'false'");
+}
+
+function parseFloat(property, str) {
+    let number = Number.parseFloat(str);
+    if (Number.isNaN(number)) {
+        throw new Error(`Invalid input: ${property} -> ${str}: Not Supported!`);
+    } else return number;
 }
 
 function readCsv(fileStore, filePath) {
@@ -111,6 +126,8 @@ function isTypeSupported(type) {
         case "BINARY_STATE":
         case "NO_UPDATE":
         case "UPDATE":
+        case "POINT_CHANGE":
+        case "RANGE":
             verbose(`${type}: supported`);
             return;
         default:
@@ -183,11 +200,11 @@ for (const eventDetectorCsv of eventDetectorsArray) {
         update = true;
     }
 
-    //UPDATE detectors do not support duration. Ignore and warn if this is an UPDATE detector
-    if (eventDetectorCsv.detectorType === "UPDATE") {
+    //UPDATE AND POINT CHANGE detectors do not support duration. Ignore and warn if this is an UPDATE OR POINT CHANGE detector
+    if (['UPDATE', 'POINT_CHANGE'].includes(eventDetectorCsv.detectorType)) {
         if (changeProperty(eventDetectorCsv.newDuration) || changeProperty(eventDetectorCsv.newDurationType)) {
-            verbose(`Duration settings are not compatible with UPDATE detectors. Change duration attempt is ignored for detector with XID ${eventDetectorCsv.eventDetectorXid}.`);
-            log.warn('Duration settings are not compatible with UPDATE detectors. Change duration attempt is ignored for detector with XID {}.', eventDetectorCsv.eventDetectorXid);
+            verbose(`Duration settings are not compatible with ${eventDetectorCsv.detectorType} detectors. Change duration attempt is ignored for detector with XID ${eventDetectorCsv.eventDetectorXid}.`);
+            log.warn('Duration settings are not compatible with {} detectors. Change duration attempt is ignored for detector with XID {}.', eventDetectorCsv.detectorType, eventDetectorCsv.eventDetectorXid);
         }
     } else {
         // Change duration if newDuration has been set
@@ -227,19 +244,117 @@ for (const eventDetectorCsv of eventDetectorsArray) {
     }
 
     // Change limit if newLimit has been set
-    if (changeProperty(eventDetectorCsv.newLimit)) {
-        verbose(`Editing Detector limit for ${eventDetectorCsv.eventDetectorXid} to new limit: ${eventDetectorCsv.newLimit}`);
-        detector.setLimit(Number.parseFloat(eventDetectorCsv.newLimit));
-        const validateMsg = eventDetectorsService.validate(detector).getMessages();
-        if (validateMsg && validateMsg.length != 0) {
-            log.error('Limit validation failed for xid {} Reason:{}', eventDetectorCsv.eventDetectorXid, validateMsg);
-            verbose(`Limit validation failed for xid ${eventDetectorCsv.eventDetectorXid} Reason: ${validateMsg}`);
-            update = false;
-            failed++;
-            continue;
+    try {
+        if (changeProperty(eventDetectorCsv.newLimit)) {
+            verbose(`Editing Detector limit for ${eventDetectorCsv.eventDetectorXid} to new limit: ${eventDetectorCsv.newLimit}`);
+            detector.setLimit(parseFloat('limit', eventDetectorCsv.newLimit));
+            const validateMsg = eventDetectorsService.validate(detector).getMessages();
+            if (validateMsg && validateMsg.length != 0) throw new Error(validateMsg);
+            verbose(`Detector new limit: ${detector.getLimit()}`);
+            update = true;
         }
-        verbose(`Detector new limit: ${detector.getLimit()}`);
-        update = true;
+    } catch (e) {
+        log.error('Limit validation failed for xid {} Reason:{}', eventDetectorCsv.eventDetectorXid, e);
+        verbose(`Limit validation failed for xid ${eventDetectorCsv.eventDetectorXid} Reason: ${e}`);
+        console.log(`Limit validation failed for xid ${eventDetectorCsv.eventDetectorXid} Reason: ${e}`);
+        update = false;
+        failed++;
+        continue;
+    }
+
+    // Change resetLimit if newResetLimit has been set
+    try {
+        if (changeProperty(eventDetectorCsv.newResetLimit)) {
+            verbose(`Editing Detector reset limit for ${eventDetectorCsv.eventDetectorXid} to new reset limit: ${eventDetectorCsv.newResetLimit}`);
+            detector.setResetLimit(parseFloat('reset limit', eventDetectorCsv.newResetLimit));
+            const validateMsg = eventDetectorsService.validate(detector).getMessages();
+            if (validateMsg && validateMsg.length != 0) throw new Error(validateMsg);
+            verbose(`Detector new reset limit: ${detector.getResetLimit()}`);
+            update = true;
+        }
+    } catch (e) {
+        log.error('Reset limit validation failed for xid {} Reason:{}', eventDetectorCsv.eventDetectorXid, e);
+        verbose(`Reset limit validation failed for xid ${eventDetectorCsv.eventDetectorXid} Reason: ${e}`);
+        console.log(`Reset limit validation failed for xid ${eventDetectorCsv.eventDetectorXid} Reason: ${e}`);
+        update = false;
+        failed++;
+        continue;
+    }
+
+    // Change useResetLimit if newUseResetLimit has been set
+    try {
+        if (changeProperty(eventDetectorCsv.newUseResetLimit)) {
+            verbose(`Editing Detector use reset limit for ${eventDetectorCsv.eventDetectorXid} to new use reset limit: ${eventDetectorCsv.newUseResetLimit}`);
+            detector.setUseResetLimit(stringToBoolean(eventDetectorCsv.newUseResetLimit.toLowerCase()));
+            const validateMsg = eventDetectorsService.validate(detector).getMessages();
+            if (validateMsg && validateMsg.length != 0) throw new Error(validateMsg);
+            verbose(`Detector new use reset limit: ${detector.isUseResetLimit()}`);
+            update = true;
+        }
+    } catch (e) {
+        log.error('Use reset limit validation failed for xid {} Reason:{}', eventDetectorCsv.eventDetectorXid, e);
+        verbose(`Use reset limit validation failed for xid ${eventDetectorCsv.eventDetectorXid} Reason: ${e}`);
+        console.log(`Use reset limit validation failed for xid ${eventDetectorCsv.eventDetectorXid} Reason: ${e}`);
+        update = false;
+        failed++;
+        continue;
+    }
+
+    // Change lowRangeLimit if newLowRangeLimit has been set
+    try {
+        if (changeProperty(eventDetectorCsv.newLowRangeLimit)) {
+            verbose(`Editing Detector low range limit for ${eventDetectorCsv.eventDetectorXid} to new low range limit: ${eventDetectorCsv.newLowRangeLimit}`);
+            detector.setLow(parseFloat('low range limit', eventDetectorCsv.newLowRangeLimit));
+            const validateMsg = eventDetectorsService.validate(detector).getMessages();
+            if (validateMsg && validateMsg.length != 0) throw new Error(validateMsg);
+            verbose(`Detector new low range limit: ${detector.getLow()}`);
+            update = true;
+        }
+    } catch (e) {
+        log.error('Low range limit validation failed for xid {} Reason:{}', eventDetectorCsv.eventDetectorXid, e);
+        verbose(`Low range limit validation failed for xid ${eventDetectorCsv.eventDetectorXid} Reason: ${e}`);
+        console.log(`Low range limit validation failed for xid ${eventDetectorCsv.eventDetectorXid} Reason: ${e}`);
+        update = false;
+        failed++;
+        continue;
+    }
+
+    try {
+        // Change highRangeLimit if newHighRangeLimit has been set
+        if (changeProperty(eventDetectorCsv.newHighRangeLimit)) {
+            verbose(`Editing Detector high range limit for ${eventDetectorCsv.eventDetectorXid} to new high range limit: ${eventDetectorCsv.newHighRangeLimit}`);
+            detector.setHigh(parseFloat('high range limit', eventDetectorCsv.newHighRangeLimit));
+            const validateMsg = eventDetectorsService.validate(detector).getMessages();
+            if (validateMsg && validateMsg.length != 0) throw new Error(validateMsg);
+            verbose(`Detector new high range limit: ${detector.getHigh()}`);
+            update = true;
+        }
+    } catch (e) {
+        log.error('High range limit validation failed for xid {} Reason:{}', eventDetectorCsv.eventDetectorXid, e);
+        verbose(`High range limit validation failed for xid ${eventDetectorCsv.eventDetectorXid} Reason: ${e}`);
+        console.log(`High range limit validation failed for xid ${eventDetectorCsv.eventDetectorXid} Reason: ${e}`);
+        update = false;
+        failed++;
+        continue;
+    }
+
+    // Change withinRange if newWithinRange has been set
+    try {
+        if (changeProperty(eventDetectorCsv.newWithinRange)) {
+            verbose(`Editing Detector within range for ${eventDetectorCsv.eventDetectorXid} to new within range: ${eventDetectorCsv.newWithinRange}`);
+            detector.setWithinRange(stringToBoolean(eventDetectorCsv.newWithinRange.toLowerCase()));
+            const validateMsg = eventDetectorsService.validate(detector).getMessages();
+            if (validateMsg && validateMsg.length != 0) throw new Error(validateMsg);
+            verbose(`Detector new within range: ${detector.isWithinRange()}`);
+            update = true;
+        }
+    } catch (e) {
+        log.error('Within range validation failed for xid {} Reason:{}', eventDetectorCsv.eventDetectorXid, e);
+        verbose(`Within range validation failed for xid ${eventDetectorCsv.eventDetectorXid} Reason: ${e}`);
+        console.log(`Within range limit validation failed for xid ${eventDetectorCsv.eventDetectorXid} Reason: ${e}`);
+        update = false;
+        failed++;
+        continue;
     }
 
     // Change alarmlevel if newAlarmLevel has been set
@@ -445,6 +560,11 @@ console.log(message);
     '' as newDetectorName,
     '' as newAlarmLevel,
     '' as newLimit,
+    '' as newResetLimit,
+    '' as newUseResetLimit,
+    '' as newLowRangeLimit,
+    '' as newHighRangeLimit,
+    '' as newWithinRange,
     '' as newStateValues,
     '' as newStateInverted,
     '' as newDuration,
@@ -456,6 +576,10 @@ console.log(message);
     eD.data->>'$.name' as existingName,
     eD.data->>'$.alarmLevel' as existingAlarmLevel,
     eD.data->>'$.limit' as existingLimit,
+    eD.data->>'$.resetLimit' as existingResetLimit,
+    eD.data->>'$.high' as existingHigh,
+    eD.data->>'$.low' as existingLow,
+    eD.data->>'$.withinRange' as existingWithinRange,
     eD.data->>'$.duration' as existingDuration,
     REPLACE(REPLACE(REPLACE(REPLACE(eD.data->>'$.durationType','SECONDS',1),'MINUTES',2),'HOURS',3),'DAYS',4) as existingDurationType,
     CASE
@@ -511,6 +635,11 @@ console.log(message);
     '' as newDetectorName,
     '' as newAlarmLevel,
     '' as newLimit,
+    '' as newResetLimit,
+    '' as newUseResetLimit,
+    '' as newLowRangeLimit,
+    '' as newHighRangeLimit,
+    '' as newWithinRange,
     '' as newStateValues,
     '' as newStateInverted,
     '' as newDuration,
@@ -522,6 +651,10 @@ console.log(message);
     JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.name')) as existingName,
     JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.alarmLevel')) as existingAlarmLevel,
     JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.limit')) as existingLimit,
+    JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.resetLimit')) as existingResetLimit,
+    JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.high')) as existingHigh,
+    JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.low')) as existingLow,
+    JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.withinRange')) as existingWithinRange,
     JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.duration')) as existingDuration,
     REPLACE(REPLACE(REPLACE(REPLACE(JSON_UNQUOTE(JSON_EXTRACT(eD.data, '$.durationType')),'SECONDS',1),'MINUTES',2),'HOURS',3),'DAYS',4) as existingDurationType,
     CASE
@@ -578,6 +711,11 @@ console.log(message);
     '' as newDetectorName,
     '' as newAlarmLevel,
     '' as newLimit,
+    '' as newResetLimit,
+    '' as newUseResetLimit,
+    '' as newLowRangeLimit,
+    '' as newHighRangeLimit,
+    '' as newWithinRange,
     '' as newStateValues,
     '' as newStateInverted,
     '' as newDuration,
@@ -601,6 +739,26 @@ console.log(message);
             REGEXP_SUBSTR(eD.data,'"limit"(\s*?:{1}\s*?)"(.*?)"'),
                 '"limit":"', ''),
                     '"', '') AS existingLimit,
+    REPLACE(
+        REPLACE(
+            REGEXP_SUBSTR(eD.data,'"resetLimit"(\s*?:{1}\s*?)(.*?),'),
+                '"resetLimit":', ''),
+                    ',', '') AS existingResetLimit,
+    REPLACE(
+        REPLACE(
+            REGEXP_SUBSTR(eD.data,'"high"(\s*?:{1}\s*?)(.*?),'),
+                '"high":', ''),
+                    ',', '') AS existingHigh,
+    REPLACE(
+        REPLACE(
+            REGEXP_SUBSTR(eD.data,'"low"(\s*?:{1}\s*?)(.*?),'),
+                '"low":', ''),
+                    ',', '') AS existingLow,
+    REPLACE(
+        REPLACE(
+            REGEXP_SUBSTR(eD.data,'"withinRange"(\s*?:{1}\s*?)(.*?),'),
+                '"withinRange":', ''),
+                    ',', '') AS existingWithinRange,
     REPLACE(
         REPLACE(
             REGEXP_SUBSTR(eD.data,'"duration"(\s*?:{1}\s*?)(.*?),'),
