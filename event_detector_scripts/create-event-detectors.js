@@ -1,11 +1,11 @@
 /**
  * Create a group of event detectors
  * Was tested MANGO 4.5.X and MANGO 5.0.X and MANGO 5.1.X
- * Last update Sep 2024
+ * Last update Oct 2024
  * 
  * The create_event_detectors.js script requires a CSV file to be present in the filestore 
  *  named event-detectors-to-create.csv with the following structure: 
- * dataPointId,dataPointXid,detectorType,detectorName,alarmLevel,limit,stateValues,stateInverted,duration,duration_unit,handlers_to_link,dataPointName,dataPointType,any,other,column,can,be,present,but,will be,ignored
+ * dataPointId,dataPointXid,detectorType,detectorName,alarmLevel,limit,resetLimit,lowRangeLimit,highRangeLimit,withinRange,stateValues,stateInverted,duration,duration_unit,handlers_to_link,dataPointName,dataPointType,any,other,column,can,be,present,but,will be,ignored
  * 
  * There's a sample MySQL query at the bottom of this script that can be used in the Mango SQL Console to generate a properly formatted CSV file.
  * 
@@ -18,6 +18,8 @@
  *      BINARY_STATE
  *      NO_UPDATE
  *      UPDATE
+ *      POINT_CHANGE
+ *      RANGE
  *      Fail on a mismatch
  *      Fail if some other type of detector that is not supported
  *  3. Create the new event detector
@@ -75,7 +77,7 @@ const EventHandlerDao = Java.type('com.serotonin.m2m2.db.dao.EventHandlerDao');
 const ArrayList = Java.type('java.util.ArrayList');
 
 const mainHeaders = [];
-mainHeaders.push("dataPointId", "dataPointXid", "detectorType", "detectorName", "alarmLevel", "limit", "stateValues", "stateInverted", "duration", "durationType", "handlers_to_link", "dataPointName", "dataPointType");
+mainHeaders.push("dataPointId", "dataPointXid", "detectorType", "detectorName", "alarmLevel", "limit", "resetLimit", "lowRangeLimit", "highRangeLimit", "withinRange", "stateValues", "stateInverted", "duration", "durationType", "handlers_to_link", "dataPointName", "dataPointType");
 
 const compare = (actual, expected, message) => {
     if (actual === expected) {
@@ -135,6 +137,8 @@ function isTypeSupported(type) {
         case "BINARY_STATE":
         case "NO_UPDATE":
         case "UPDATE":
+        case "POINT_CHANGE":
+        case "RANGE":
             verbose(`${type}: supported`);
             return;
         default:
@@ -356,6 +360,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
 
 
     let hasLimitValue = false;
+    let hasResetValue = false;
     //Check if this will be a LIMIT detector
     if (['HIGH_LIMIT', 'LOW_LIMIT'].includes(eventDetectorCsv.detectorType)) {
         //Do not allow MULTISTATE or BINARY points to use LIMIT detectors
@@ -382,6 +387,96 @@ for (const eventDetectorCsv of eventDetectorsArray) {
             } catch (e) {
                 log.error('Limit is:{}', e);
                 verbose(`Limit failed with reason: ${e}`);
+                insertED = false;
+                failed++;
+                continue;
+            }
+
+            //Determine if a reset limit value has been provided
+            try {
+                assureNotEmpty('resetLimit', eventDetectorCsv.resetLimit);
+                if (Number.isNaN(Number.parseFloat(eventDetectorCsv.resetLimit))) {
+                    throw new Error(`resetLimit ${eventDetectorCsv.resetLimit}: Not Supported!`)
+                }
+                else
+                {
+                    hasResetValue = true;
+                }
+            } catch (e) {
+                //If there are no resetLimit, this is not an error
+            }
+        }
+    }
+
+    //Validate POINT_CHANGE detectors
+    if (eventDetectorCsv.detectorType === 'POINT_CHANGE') {
+        //POINT_CHANGE detectors do not support duration.
+        //If the duration is something other than 0, raise a warning
+        if (duration != 0) {
+            log.warn(`Duration is set for an POINT_CHANGE detector, which is not allowed. Duration will be ignored.`);
+            verbose(`Duration is set for an POINT_CHANGE detector, which is not allowed. Duration will be ignored.`);
+        }
+    }
+
+    let hasLowRangeLimit = false;
+    let hasHighRangeLimit = false;
+    //Validate RANGE detectors
+    if (eventDetectorCsv.detectorType === 'RANGE') {
+        // TODO confirm that
+        //Do not allow MULTISTATE or BINARY points to use LIMIT detectors
+        if (['MULTISTATE', 'BINARY'].includes(eventDetectorCsv.dataPointType)) {
+            //This type of point cannot use this type of detector
+            log.error(`Detector Type ${eventDetectorCsv.detectorType} not supported for Point Type ${eventDetectorCsv.dataPointType} on Point XID ${eventDetectorCsv.dataPointXid}.`);
+            verbose(`Detector Type ${eventDetectorCsv.detectorType} not supported for Point Type ${eventDetectorCsv.dataPointType} on Point XID ${eventDetectorCsv.dataPointXid}.`);
+            insertED = false;
+            failed++;
+            continue;
+        }
+        else {
+            //Determine if a low range limit value has been provided
+            try {
+                assureNotEmpty('lowRangeLimit', eventDetectorCsv.lowRangeLimit);
+                if (Number.isNaN(Number.parseFloat(eventDetectorCsv.lowRangeLimit))) {
+                    throw new Error(`lowRangeLimit ${eventDetectorCsv.lowRangeLimit}: Not Supported!`)
+                }
+                else
+                {
+                    hasLowRangeLimit = true;
+                }
+            } catch (e) {
+                log.error('Low Range Limit is:{}', e);
+                verbose(`Low Range Limit failed with reason: ${e}`);
+                insertED = false;
+                failed++;
+                continue;
+            }
+
+            //Determine if a high range limit value has been provided
+            try {
+                assureNotEmpty('highRangeLimit', eventDetectorCsv.highRangeLimit);
+                if (Number.isNaN(Number.parseFloat(eventDetectorCsv.highRangeLimit))) {
+                    throw new Error(`highRangeLimit ${eventDetectorCsv.highRangeLimit}: Not Supported!`)
+                }
+                else
+                {
+                    hasHighRangeLimit = true;
+                }
+            } catch (e) {
+                log.error('High Range Limit is:{}', e);
+                verbose(`High Range Limit failed with reason: ${e}`);
+                insertED = false;
+                failed++;
+                continue;
+            }
+
+            //Validate highRangeLimit greater than lowRangeLimit
+            try {
+                if(hasLowRangeLimit && hasHighRangeLimit && Number.parseFloat(eventDetectorCsv.highRangeLimit) <= Number.parseFloat(eventDetectorCsv.lowRangeLimit)) {
+                    throw new Error(`highRangeLimit ${eventDetectorCsv.highRangeLimit} Must be greater than ${eventDetectorCsv.lowRangeLimit}`)
+                }
+            } catch (e) {
+                log.error('Will not create new Event Detector. Failed validation: {}', e.message);
+                verbose(`Failed validation: ${e.message}`);
                 insertED = false;
                 failed++;
                 continue;
@@ -421,7 +516,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
             
              //Setting custom resetDuration values via script is not supported at this time
              //Leaving resetDuration = null will result in the resetDuration = duration in Mango 5.1+
-             if (eventDetectorCsv.detectorType != 'UPDATE') {
+            if (!['UPDATE', 'POINT_CHANGE'].includes(eventDetectorCsv.detectorType)) {
                 //Force resetDuration = 0 SECONDS
                 //These methods only exist in Mango 5.1+
                 if (detector.setResetDuration) {
@@ -456,7 +551,7 @@ for (const eventDetectorCsv of eventDetectorsArray) {
             verbose(`Detector AlarmLevel: ${detector.getAlarmLevel()}`);
             
             //set Duration settings
-            if (eventDetectorCsv.detectorType != 'UPDATE') {
+            if (!['UPDATE', 'POINT_CHANGE'].includes(eventDetectorCsv.detectorType)) {
                 verbose(`Applying duration settings ${duration} ${durationType}...`);
                 detector.setDuration(Number.parseInt(duration));
                 detector.setDurationType(Number.parseInt(durationType));
@@ -482,6 +577,30 @@ for (const eventDetectorCsv of eventDetectorsArray) {
                 //set limit
                 detector.setLimit(Number.parseFloat(eventDetectorCsv.limit));
                 verbose(`Detector new limit: ${detector.getLimit()}`);
+            }
+
+            if (hasResetValue && ['HIGH_LIMIT', 'LOW_LIMIT'].includes(eventDetectorCsv.detectorType)) {
+                //set reset limit
+                detector.setResetLimit(Number.parseFloat(eventDetectorCsv.resetLimit));
+                verbose(`Detector new reset limit: ${detector.getResetLimit()}`);
+
+                //set use reset limit
+                detector.setUseResetLimit(true);
+                verbose(`Detector new use reset limit: ${detector.isUseResetLimit()}`);
+            }
+
+            if (hasLowRangeLimit && hasHighRangeLimit && eventDetectorCsv.detectorType === 'RANGE') {
+                // set low range limit
+                detector.setLow(Number.parseFloat(eventDetectorCsv.lowRangeLimit));
+                verbose(`Detector new low range limit: ${detector.getLow()}`);
+
+                // set high range limit
+                detector.setHigh(Number.parseFloat(eventDetectorCsv.highRangeLimit));
+                verbose(`Detector new high range limit: ${detector.getHigh()}`);
+
+                // set withinRange
+                detector.setWithinRange(eventDetectorCsv.withinRange.toLowerCase() === 'true');
+                verbose(`Detector new within Range: ${detector.isWithinRange()}`);
             }
 
             //set event handlers
@@ -535,7 +654,11 @@ console.log(message);
     '' as detectorType, 
     '' as detectorName, 
     '' as alarmLevel, 
-    '' as `limit`,  
+    '' as `limit`,
+    '' as `resetLimit`,
+	  '' as `lowRangeLimit`,
+	  '' as `highRangeLimit`,
+	  '' as `withinRange`,
     '' as stateValues, 
     '' as stateInverted,
     0 as duration,
@@ -572,6 +695,10 @@ console.log(message);
 	'' as detectorName,
 	'' as alarmLevel,
 	'' as `limit`,
+	'' as `resetLimit`,
+	'' as `lowRangeLimit`,
+	'' as `highRangeLimit`,
+	'' as `withinRange`,
 	'' as stateValues,
 	'' as stateInverted,
 	0 as duration,
@@ -608,6 +735,10 @@ console.log(message);
     '' as detectorName,
     '' as alarmLevel,
     '' as `limit`,
+    '' as `resetLimit`,
+	  '' as `lowRangeLimit`,
+	  '' as `highRangeLimit`,
+	  '' as `withinRange`,
     '' as stateValues,
     '' as stateInverted,
     0 as duration,
