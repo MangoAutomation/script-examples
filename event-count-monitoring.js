@@ -58,9 +58,12 @@ DP_XIDS.forEach((item) => {
 // Date management
 const dateTo = new Date().valueOf(); // current time
 //var dateFrom = Date.parse('2024-08-26T17:01:13.205Z').valueOf(); // epoch ms
-const now = new Date();
-const dateFromRecent = new Date(now.getTime() - RECENT_PERIOD_HOURS * 60 * 60 * 1000); // 2 hours in milliseconds
-const dateFromRecentMultiplier = new Date(now.getTime() - (RECENT_PERIOD_HOURS * RANGE_PERIOD_MULTIPLE)  * 60 * 60 * 1000); // 2 hours in milliseconds
+const dateNow = new Date();
+const dateFromRecent = new Date(dateNow.getTime() - (RECENT_PERIOD_HOURS * 60 * 60 * 1000)); // 2 hours in milliseconds
+const dateFromRecentMultiplier = new Date(dateNow.getTime() - ((RECENT_PERIOD_HOURS * RANGE_PERIOD_MULTIPLE)  * 60 * 60 * 1000)); // 2 hours in milliseconds
+
+console.log(dateFromRecent);
+console.log(dateFromRecentMultiplier);
 
 
 // Iterave over each event type and get all the event counts
@@ -70,12 +73,12 @@ function requestType(value) {
 
     let subSelectMap = new Map();
     var astNodeInitial = new ASTNode("eq", "typeName", value);
-    var rql = RQLUtils.addAndRestriction(astNodeInitial, new ASTNode("ge", "activeTs", "1661533273205"));
-    rql = RQLUtils.addAndRestriction(rql, new ASTNode("lt", "activeTs", new Date().getTime()));
+    var rql = RQLUtils.addAndRestriction(astNodeInitial, new ASTNode("ge", "activeTs", dateFromRecent.valueOf()));
+    rql = RQLUtils.addAndRestriction(rql, new ASTNode("lt", "activeTs", dateNow.valueOf()));
     var conditions = new ConditionSortLimit(null, null, null, null);
     conditions = eventInstanceService.rqlToCondition(rql, subSelectMap, null, null);
     var dateArray = new Array();
-    dateArray.push(new Date(dateFromRecent)); // CHANGE THIS
+    dateArray.push(new Date(dateFromRecent));
     dateArray.push(new Date());
     const newquery = services.eventInstanceService.countQuery(conditions, dateArray);
     const tempTotal = newquery[0].getTotal();
@@ -103,12 +106,12 @@ function requestTypeRange(value) {
 
     let subSelectMap = new Map();
     var astNodeInitial = new ASTNode("eq", "typeName", value);
-    var rql = RQLUtils.addAndRestriction(astNodeInitial, new ASTNode("ge", "activeTs", "1661533273205"));
-    rql = RQLUtils.addAndRestriction(rql, new ASTNode("lt", "activeTs", new Date().getTime()));
+    var rql = RQLUtils.addAndRestriction(astNodeInitial, new ASTNode("ge", "activeTs", dateFromRecentMultiplier.valueOf()));
+    rql = RQLUtils.addAndRestriction(rql, new ASTNode("lt", "activeTs", dateNow.valueOf()));
     var conditions = new ConditionSortLimit(null, null, null, null);
     conditions = eventInstanceService.rqlToCondition(rql, subSelectMap, null, null);
     var dateArray = new Array();
-    dateArray.push(new Date(dateFromRecentMultiplier)); //CHANGE THIS
+    dateArray.push(new Date(dateFromRecentMultiplier));
     dateArray.push(new Date());
     const newquery = services.eventInstanceService.countQuery(conditions, dateArray);
     const tempTotal = newquery[0].getTotal();
