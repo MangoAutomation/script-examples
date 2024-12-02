@@ -1,12 +1,9 @@
-/**
- * Called when the Mango event is raised.
- */
 //  This script checks if the number of events, by type, in the RECENT_PERIOD exceeds the AVERAGE_EVENTS_PER_PERIOD, by more than the TYPE_THRESHOLD percentage, set the alarm data point for this type to 1 (Active alarm). Else, set the data point to 0 (Inactive alarm).
 //
 // To use this script you need to modify this script to include the following configurable parameters
 // RECENT_PERIOD: initially 24 hours
 // RANGE_PERIOD_MULTIPLE: initially 10
-// TYPE_THRESHOLD for each event type (DATA_POINT, DATA_SOURCE, SYSTEM, etc): initially 150
+// TYPE_THRESHOLD for each event type (DATA_POINT, DATA_SOURCE, SYSTEM, etc)
 // DP_XIDS are the alarm data point XIDs for each event type
 
 const RECENT_PERIOD_HOURS = 24;
@@ -15,7 +12,6 @@ const TYPE_THRESHOLD = 150;
 const EVENT_TYPES = ["DATA_POINT", "DATA_SOURCE", "SYSTEM"];
 // These data points should be set previously on Mango, the XIDs are not fixed and might be substituted for the XIDs that Mango creates
 const DP_XIDS = ["DP_3e932473-b52d-41be-ac39-c231a0feed20", "DP_116cf7c9-2a43-40cf-aa7c-40fa2d7753a2", "DP_fabc2209-08c2-47a0-99ff-f7fede490689"];
-
 
 // services
 const dataPointService = services.dataPointService;
@@ -29,20 +25,16 @@ const ConditionSortLimit = Java.type('com.infiniteautomation.mango.db.query.Cond
 const RQLUtils = Java.type('com.infiniteautomation.mango.util.RQLUtils');
 const ASTNode = Java.type('net.jazdw.rql.parser.ASTNode');
 
-
 var EVENT_TYPES_SUM = new Array();
 var EVENT_TYPES_RANGE_PERIOD_SUM = new Array();
 var AVERAGE_EVENTS_PER_PERIOD = new Array();
 
-
-
 // numeric types
 const numericZero = new NumericValue(0);
 const numericOne = new NumericValue(1);
+// if using multistate, change the DP's data type to Multistate
 const multistateZero = new MultiStateValue(0);
 const multistateOne = new MultiStateValue(1);
-
-
 
 var DATA_POINTS_ALARM = new Array();
 
@@ -54,11 +46,9 @@ DP_XIDS.forEach((item) => {
 
 
 // Date management
-const dateTo = new Date().valueOf(); // current time
 const dateNow = new Date();
 const dateFromRecent = new Date(dateNow.getTime() - (RECENT_PERIOD_HOURS * 60 * 60 * 1000)); // 2 hours in milliseconds
 const dateFromRecentMultiplier = new Date(dateNow.getTime() - ((RECENT_PERIOD_HOURS * RANGE_PERIOD_MULTIPLE)  * 60 * 60 * 1000)); // 2 hours in milliseconds
-
 
 // Iterate over each event type and get all the event counts
 EVENT_TYPES.forEach(requestType);
