@@ -1,10 +1,13 @@
-//  This script checks if the number of events, by type, in the RECENT_PERIOD exceeds the AVERAGE_EVENTS_PER_PERIOD, by more than the TYPE_THRESHOLD percentage, set the alarm data point for this type to 1 (Active alarm). Else, set the data point to 0 (Inactive alarm).
-//
-// To use this script you need to modify this script to include the following configurable parameters
-// RECENT_PERIOD: initially 24 hours
-// RANGE_PERIOD_MULTIPLE: initially 10
-// TYPE_THRESHOLD for each event type (DATA_POINT, DATA_SOURCE, SYSTEM, etc)
-// DP_XIDS are the alarm data point XIDs for each event type
+/*  This script checks if the number of events, by type, in the RECENT_PERIOD_HOURS exceeds the AVERAGE_EVENTS_PER_PERIOD,
+    by more than the TYPE_THRESHOLD percentage. If the threshold is exceeded, an alarm data point value for this event type
+    will be set to 1. If the threshold is not exceeded, the alarm data point value will be set to 0.
+	
+	The following parameters are configurable:
+    • RECENT_PERIOD_HOURS: initially 24 hours
+    • RANGE_PERIOD_MULTIPLE: initially 10
+    • TYPE_THRESHOLD for each event type (DATA_POINT, DATA_SOURCE, SYSTEM, etc): initially 150%
+    • Alarm data point XIDs for each event type
+*/
 
 const RECENT_PERIOD_HOURS = 24;
 const RANGE_PERIOD_MULTIPLE = 10;
@@ -137,21 +140,28 @@ EVENT_TYPES_SUM.forEach((item) => {
     console.log("TYPE_THRESHOLD: " + TYPE_THRESHOLD + "%");
     console.log("EVENTS RECENT PERIOD: " + item);
     console.log("AVERAGE_EVENTS_PER_PERIOD: " + AVERAGE_EVENTS_PER_PERIOD[exceedsThresholdIndex]);
+    console.log("Recent events can't exceed by " + TYPE_THRESHOLD + "% the average events per period " + AVERAGE_EVENTS_PER_PERIOD[exceedsThresholdIndex]);
+    const thresholdForEvents = (((TYPE_THRESHOLD/100)*AVERAGE_EVENTS_PER_PERIOD[exceedsThresholdIndex])).toFixed(2);
+    const thresholdDescription = (TYPE_THRESHOLD + "% of " + AVERAGE_EVENTS_PER_PERIOD[exceedsThresholdIndex] + " (average events)");
+    console.log("TRESHOLD FOR RECENT EVENTS: " + thresholdForEvents + "  --->  " + thresholdDescription);
+    thresholdForEventsRoundedUp = Math.ceil(thresholdForEvents);
+    console.log("TRESHOLD NEEDS TO BE ROUNDED UP: " + thresholdForEventsRoundedUp);
     // get the allowed excess
-    const allowedExcess = (TYPE_THRESHOLD/100)*AVERAGE_EVENTS_PER_PERIOD[exceedsThresholdIndex];
-    console.log("allowedExcess: " + allowedExcess);
+    const allowedExcess = Math.ceil((TYPE_THRESHOLD/100)*AVERAGE_EVENTS_PER_PERIOD[exceedsThresholdIndex]) - item;
     // get the real excess
-    const realExcess = item-AVERAGE_EVENTS_PER_PERIOD[exceedsThresholdIndex];
-    console.log("realExcess: " + realExcess);
+    const realExcess = item-thresholdForEventsRoundedUp;
+    console.log("Excess: " + realExcess);
 
     // real excess surpassess allowed excess?
-    if(realExcess > allowedExcess) {
-        console.log("Setting data point to 1 - active alarm");
-        dataPointService.setValue(DATA_POINTS_ALARM[exceedsThresholdIndex].getId(), numericOne, null);
-    }
-    else {
+    if(realExcess <= 0) {
+        console.log("Events during the recent period (" + item + ") does not exceed the permitted threshold of " + thresholdForEventsRoundedUp);
         console.log("Setting data point to 0 - inactive alarm");
         dataPointService.setValue(DATA_POINTS_ALARM[exceedsThresholdIndex].getId(), numericZero, null);
+    }
+    else {
+        console.log("Events during the recent period (" + item + ") exceed the permitted threshold of " + thresholdForEventsRoundedUp);
+        console.log("Setting data point to 1 - active alarm");
+        dataPointService.setValue(DATA_POINTS_ALARM[exceedsThresholdIndex].getId(), numericOne, null);
     }
     exceedsThresholdIndex++;
     console.log("============================================================== ")
