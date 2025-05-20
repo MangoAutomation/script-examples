@@ -23,11 +23,11 @@ var eventInstanceServiceClass = Common.getBean(EventInstanceService.class);
 //first check whether this Meta data point has any acitve maintenance events, if has return 0
  var metapointActiveMtcEventsCount = 0;
  var pointValueSum = 0;
- var MetaPointXid = 'DP_a620e9ab-8760-4177-8c1a-fecea969652f'
- var isMetaPointEnabled = RuntimeManager.isDataPointEnabled(MetaPointXid);
+ var dataPointXid = 'DP_a620e9ab-8760-4177-8c1a-fecea969652f'
+ var isPointEnabled = RuntimeManager.isDataPointEnabled(dataPointXid);
  
- if (isMetaPointEnabled) { 
-        metapointActiveMtcEventsCount = getPointXidActiveMaintenanceEvents(MetaPointXid);
+ if (isPointEnabled) {
+        metapointActiveMtcEventsCount = getPointXidActiveMaintenanceEvents(dataPointXid);
  } else {
       return pointValueSum;
  }
@@ -58,9 +58,8 @@ var eventInstanceServiceClass = Common.getBean(EventInstanceService.class);
 
   if (activeContextPointCount > 0) {
        return pointValueSum;
-  } else {
-       
   }
+
 }
 
 //Helper functions
@@ -113,7 +112,7 @@ var subSelectMap = new HashMap();
 //function to return the active MaintenanceEvent count linked to pointXids
 function getPointXidActiveMaintenanceEvents(pointXid) {
  
-var sumOfActiveMaintenanceEventsCount = new ArrayList();
+var listOfActiveMaintenanceEvents = new ArrayList();
 var activeEventsCount = null;    
 //create a map to store results
 var HashMap = Java.type('java.util.HashMap');
@@ -133,7 +132,7 @@ var models = new ArrayList();
         rql = RQLUtils.addAndRestriction(rql, new ASTNode("in", "typeRef1", model.id));
            
         activeEventsCount = eventInstanceServiceClass.customizedCount(rql);
-        sumOfActiveMaintenanceEventsCount.add(activeEventsCount);
+        listOfActiveMaintenanceEvents.add(activeEventsCount);
         
         //if(activeEventsCount != null && Number(activeEventsCount) > 0)
                //print("This meta/context point has active maintenance events..")
@@ -141,7 +140,7 @@ var models = new ArrayList();
         });
      
         daoClass.getForDataPoint(pointXid, new MyConsumer());
-      return getTotalCountOfActiveMaintenanceEvents(sumOfActiveMaintenanceEventsCount);
+      return getTotalCountOfActiveMaintenanceEvents(listOfActiveMaintenanceEvents);
 }
 
 
