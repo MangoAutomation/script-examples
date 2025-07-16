@@ -1,0 +1,29 @@
+/*
+This script runs a SELECT query on the dataPoints table, filtering on the dataSourceId column similar to:
+SELECT id, xid, dataSourceId
+FROM dataPoints
+WHERE dataSourceId = 1
+LIMIT 10
+*/
+
+const Common = Java.type('com.serotonin.m2m2.Common');
+const DSL = Java.type('org.jooq.impl.DSL');
+const RoleInheritance = Java.type('com.infiniteautomation.mango.db.tables.RoleInheritance');
+const DatabaseProxy = Java.type('com.serotonin.m2m2.db.DatabaseProxy');
+const proxy = Common.getBean(DatabaseProxy);
+const create = proxy.getContext();
+
+const idField = DSL.field('id');
+const xidField = DSL.field('xid');
+const dataSourceIdField = DSL.field('dataSourceId');
+const dataPointsTable = DSL.table('dataPoints');
+
+const records = create.select(idField, xidField, dataSourceIdField)
+    .from(dataPointsTable)
+    .where(dataSourceIdField.eq(1))
+    .limit(10)
+    .fetch();
+
+for (const record of records) {
+    console.log(record);
+}
