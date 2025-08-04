@@ -18,8 +18,6 @@ try {
     const secretKey = 'MySecureEncryptionKey123456789012'; // 32 characters for AES-256
     const secretToStore = 'my-api-key-12345';
 
-    LOG.info('Generated random key: ' + generateRandomKey());
-
     // Store encrypted secret
     storeEncryptedSecret(
         'api-key-secret',           // XID

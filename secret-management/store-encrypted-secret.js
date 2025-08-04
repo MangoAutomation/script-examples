@@ -222,19 +222,4 @@ function retrieveAndDecryptSecret(xid, decryptionKey) {
     }
 }
 
-/**
- * Utility function to generate a random encryption key
- * @param {number} length - Length of the key (default: 32)
- * @returns {string} Random key
- */
-function generateRandomKey(length) {
-    length = length || 32;
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
-}
-
 STORE_SECRET_LOG.info('Secure String Encryption Script loaded successfully');
