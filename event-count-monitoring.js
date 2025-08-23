@@ -86,13 +86,8 @@ function checkEventCounts() {
         var dateArray = new Array();
         dateArray.push(new Date(dateFromRecent));
         dateArray.push(new Date());
-        const newquery = services.eventInstanceService.countQuery(conditions, dateArray);
-        const tempTotal = newquery[0].getTotal();
-        var sum=0;
-        tempTotal.keySet().forEach((item) => {
-            sum += tempTotal.get(item);
-        });
-        EVENT_TYPES_SUM.push(sum);
+        const newquery = services.eventInstanceService.count(rql.toString());
+        EVENT_TYPES_SUM.push(newquery);
     }
     
     console.log("=============================== NUMBER OF EVENTS FOR RECENT PERIOD =============================== ")
@@ -116,17 +111,9 @@ function checkEventCounts() {
         rql = RQLUtils.addAndRestriction(rql, new ASTNode("lt", "activeTs", dateNow.valueOf()));
         var conditions = new ConditionSortLimit(null, null, null, null);
         conditions = eventInstanceService.rqlToCondition(rql, subSelectMap, null, null);
-        var dateArray = new Array();
-        dateArray.push(new Date(dateFromRecentMultiplier));
-        dateArray.push(new Date());
-        const newquery = services.eventInstanceService.countQuery(conditions, dateArray);
-        const tempTotal = newquery[0].getTotal();
-    
-        var sum=0;
-        tempTotal.keySet().forEach((item) => {
-            sum += tempTotal.get(item);
-        });
-        EVENT_TYPES_RANGE_PERIOD_SUM.push(sum);
+        const newquery = services.eventInstanceService.count(rql.toString());
+
+        EVENT_TYPES_RANGE_PERIOD_SUM.push(newquery);
     }
     
     console.log("=============================== NUMBER OF TOTAL EVENTS BY TYPE =============================== ")
@@ -227,26 +214,26 @@ function determineDataPointType(dataPoint) {
 };
 
 function setDataPointValue(dataPoint, newValue) {
-    const pointType = determineDataPointType(dataPoint); 
+    const pointType = determineDataPointType(dataPoint);
     switch (pointType) {
-            case "BINARY":
-                //console.log(pointType);
-                const newBinaryValue = new binaryValue(!!newValue);
-                dataPointService.setValue(dataPoint.getId(), newBinaryValue, null);
-                break;
-            case "MULTISTATE":
-                //console.log(pointType);
-                const newMultistateValue = new multistateValue(newValue);
-                dataPointService.setValue(dataPoint.getId(), newMultistateValue, null);
-                break;
-            case "NUMERIC":
-                //console.log(pointType);
-                const newNumericValue = new numericValue(newValue);
-                dataPointService.setValue(dataPoint.getId(), newNumericValue, null);
-                break;
-            default:
-                console.log("Unsupported data point type: " + pointType + " for XID " + dataPoint.getXid());
-                log.error(`Unsupported data point type: ${pointType} for XID ${dataPoint.getXid()}`);
+        case "BINARY":
+            //console.log(pointType);
+            const newBinaryValue = new binaryValue(!!newValue);
+            dataPointService.setValue(dataPoint.getId(), newBinaryValue, null);
+            break;
+        case "MULTISTATE":
+            //console.log(pointType);
+            const newMultistateValue = new multistateValue(newValue);
+            dataPointService.setValue(dataPoint.getId(), newMultistateValue, null);
+            break;
+        case "NUMERIC":
+            //console.log(pointType);
+            const newNumericValue = new numericValue(newValue);
+            dataPointService.setValue(dataPoint.getId(), newNumericValue, null);
+            break;
+        default:
+            console.log("Unsupported data point type: " + pointType + " for XID " + dataPoint.getXid());
+            log.error(`Unsupported data point type: ${pointType} for XID ${dataPoint.getXid()}`);
     }
     return;
 };
