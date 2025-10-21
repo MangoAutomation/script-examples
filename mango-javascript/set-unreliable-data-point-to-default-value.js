@@ -31,13 +31,15 @@ function eventRaised(event) {
   // Configuration
   const DEFAULT_NUMERIC_VALUE = new NumericValue(-1.0); // Default value to assign
   const MINIMUM_IDLE_TIME = 60_000; // 1 minute (in milliseconds)
+  const DS_XIDS = ['DS_XID1','DS_XID2','DS_XID3']; // list of datasource's
 
   // Get all the datasources
   const streamPoints = DataSourceRT.class.getDeclaredMethod("streamPoints");
   streamPoints.setAccessible(true);
 
   // Get running datasources
-  const dsRTs = Common.runtimeManager.getRunningDataSources();
+  const dsList = Array.from(Common.runtimeManager.getRunningDataSources());
+  const dsRTs = dsList.filter(ds => DS_XIDS.includes(ds.getVo().getXid()));
 
   // Filter out persistent data sources (TCP/gRPC types)
   const dsRTList = [];
