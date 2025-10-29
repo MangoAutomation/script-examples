@@ -31,12 +31,12 @@ var totalWatchListsActiveMaintenanceEventsCount = 0;
 var watchListsDataPoints = new HashMap();
 watchListsDataPoints = FetchWatchListsDataPoints();
 
-function FetchWatchListsDataPoints(){
-     for(var id = 0; id < watchListActiveMaintenceEventsDataPointsInfo.size(); id++){
-          var record = watchListActiveMaintenceEventsDataPointsInfo.get(id);
-          watchListsDataPoints.put(record.get("dataPointId"),record.get("watchListXid"));
+function FetchWatchListsDataPoints() {
+    for (var id = 0; id < watchListActiveMaintenceEventsDataPointsInfo.size(); id++) {
+        var record = watchListActiveMaintenceEventsDataPointsInfo.get(id);
+        watchListsDataPoints.put(record.get("dataPointId"), record.get("watchListXid"));
     }
-    return  watchListsDataPoints;
+    return watchListsDataPoints;
 }
 
 for (var key in EXTERNAL_POINTS) {
@@ -45,80 +45,76 @@ for (var key in EXTERNAL_POINTS) {
     var wrapper = contextPoint.getDataPointWrapper();
 
     if (wrapper.enabled) {
-         var dataSourceXid = wrapper.dataSourceXid.trim();
-         var dataSource = dataSourceServiceClass.get(dataSourceXid);
+        var dataSourceXid = wrapper.dataSourceXid.trim();
+        var dataSource = dataSourceServiceClass.get(dataSourceXid);
 
-         //  ************** dataSource level checking **************************
-         if(dataSourceXid != null && dataSourceXid.length() > 0){
-            if(!alreadyProcessedDataSourceXids.containsKey(dataSourceXid)){
-              //get dataSource active maintenance events count
-              dsActiveMaintenanceEventsCount = getTotalActiveMaintenanceEventsByDataSourceId(dataSource.id);
-              alreadyProcessedDataSourceXids.put(wrapper.dataSourceXid,dsActiveMaintenanceEventsCount);
-            } else{ //retrieve existing dsactiveMaintenanceEvent
-                if(alreadyProcessedDataSourceXids.containsKey(wrapper.dataSourceXid)){
+        //  ************** dataSource level checking **************************
+        if (dataSourceXid != null && dataSourceXid.length() > 0) {
+            if (!alreadyProcessedDataSourceXids.containsKey(dataSourceXid)) {
+                //get dataSource active maintenance events count
+                dsActiveMaintenanceEventsCount = getTotalActiveMaintenanceEventsByDataSourceId(dataSource.id);
+                alreadyProcessedDataSourceXids.put(wrapper.dataSourceXid, dsActiveMaintenanceEventsCount);
+            } else { //retrieve existing dsactiveMaintenanceEvent
+                if (alreadyProcessedDataSourceXids.containsKey(wrapper.dataSourceXid)) {
                     dsActiveMaintenanceEventsCount = alreadyProcessedDataSourceXids.get(wrapper.dataSourceXid);
                 }
-           }
+            }
+            if (dsActiveMaintenanceEventsCount > 0) {
+                LOG.debug("Data Source Check: Data source for dataPointId (" + wrapper.id + ") has an active Maintenance Event: dataSource Xid '" + wrapper.dataSourceXid + "'" + " dataSourceActiveMaintenanceEventsCount = " + dsActiveMaintenanceEventsCount);
+                //Add logic here to be executed when the data source of the current context point has an active Maintenance Event
 
-           if(dsActiveMaintenanceEventsCount > 0){
-                LOG.debug("DataSource block: This dataPoint's (" +  wrapper.id + ") dataSource has activeMaintenanceEvent: dataSource xid '" + wrapper.dataSourceXid + "'" + " dataSourceActiveMaintenanceEventsCount= " + dsActiveMaintenanceEventsCount);
-           }
-         }
+            }
+        }
 
+        //  ************** DataPoint level checking **************************
+        //since dataPoint's dataSource doesn't have activeMtcEvents,check whether dataPoint has activeMaintenanceEvents
+        if (dsActiveMaintenanceEventsCount === 0) {
+            if (!alreadyProcessedDataPointXids.containsKey(wrapper.xid)) {
+                dpActiveMaintenanceEventsCount = getTotalActiveMaintenanceEventsByDataPointXid(wrapper.xid);
+                alreadyProcessedDataPointXids.put(wrapper.xid, dpActiveMaintenanceEventsCount);
+            } else {
+                if (alreadyProcessedDataPointXids.containsKey(wrapper.xid)) {
+                    dpActiveMaintenanceEventsCount = alreadyProcessedDataPointXids.get(wrapper.xid);
+                }
+            }
 
-         //  ************** DataPoint level checking **************************
-         //since dataPoint's dataSource doesn't have activeMtcEvents,check whether dataPoint has activeMaintenanceEvents
-         if(dsActiveMaintenanceEventsCount === 0){
-            if(!alreadyProcessedDataPointXids.containsKey(wrapper.xid)){
-               dpActiveMaintenanceEventsCount  = getTotalActiveMaintenanceEventsByDataPointXid(wrapper.xid);
-               alreadyProcessedDataPointXids.put(wrapper.xid,dpActiveMaintenanceEventsCount);
-        }else {
-             if(alreadyProcessedDataPointXids.containsKey(wrapper.xid)){
-                  dpActiveMaintenanceEventsCount = alreadyProcessedDataPointXids.get(wrapper.xid);
-             }
-         }
+            if (dpActiveMaintenanceEventsCount > 0) {
+                LOG.debug("Data Point Check: dataPointId (" + wrapper.id + ") has an active Maintenance Event: dataPoint Xid '" + wrapper.xid + "  dpActiveMaintenanceEventsCount= " + dpActiveMaintenanceEventsCount);
+                //Add logic here to be executed when the current context point has an active Maintenance Event linked to the data point itself (but not the data source)
 
-             if(dpActiveMaintenanceEventsCount > 0) {
-                LOG.debug("DataPoint block: This dataPoints has activeMaintenanceEvent: dataPoint xid '" + wrapper.xid + "' dataPointId " + wrapper.id + "  dpActiveMaintenanceEventsCount= " + dpActiveMaintenanceEventsCount);
-                //operations team will add some logic here
-         }
-         }
+            }
+        }
 
-         //***************** WatchList level checking for dataPoint activeMaintenanceEvent ****************************
-         /*
-          1. if dataPoint doesn't have activeMaintenanceEvent at dp level or ds level, then check watchlist level
-          2. if any of dataPoints in watchList has activeMaintenanceEvent at dp level, it will not check at watchList level
-        */
-       if((dsActiveMaintenanceEventsCount === 0) && ((dpActiveMaintenanceEventsCount === 0) )){
-             if(watchListsDataPoints.containsKey(wrapper.id)) {
-               totalWatchListsActiveMaintenanceEventsCount = 0;
-               var dpWatchListXid = watchListsDataPoints.get(wrapper.id);
-               if(!alreadyProcessedWatchLists.containsKey(dpWatchListXid) ) {
-                    if(dpWatchListXid != null && dpWatchListXid.trim().length() > 0) {
+        //***************** WatchList level checking for dataPoint activeMaintenanceEvent ****************************
+        /*
+         1. if dataPoint doesn't have activeMaintenanceEvent at dp level or ds level, then check watchlist level
+         2. if any of dataPoints in watchList has activeMaintenanceEvent at dp level, it will not check at watchList level
+       */
+        if ((dsActiveMaintenanceEventsCount === 0) && ((dpActiveMaintenanceEventsCount === 0))) {
+            totalWatchListsActiveMaintenanceEventsCount = 0;
+            if (watchListsDataPoints.containsKey(wrapper.id)) {
+                var dpWatchListXid = watchListsDataPoints.get(wrapper.id);
+                if (!alreadyProcessedWatchLists.containsKey(dpWatchListXid)) {
+                    if (dpWatchListXid != null && dpWatchListXid.trim().length() > 0) {
                         totalWatchListsActiveMaintenanceEventsCount = totalWatchListsActiveMaintenanceEventsCount + 1;
-                        alreadyProcessedWatchLists.put(dpWatchListXid,1);
-                        alreadyProcessedWatchListDataPoints.put(wrapper.id,1);
-                        LOG.debug("WatchList block: This WatchList has activeMaintenanceEvent: watchList xid '" + dpWatchListXid + "'"  + " and dataPoint in this watchList is " + wrapper.id + " totalWatchListsActiveMaintenanceEventsCount= " + totalWatchListsActiveMaintenanceEventsCount);
-                        //ops team to add some logic as the dataPointid in watchList
+                        alreadyProcessedWatchLists.put(dpWatchListXid, 1);
+                        alreadyProcessedWatchListDataPoints.put(wrapper.id, 1);
+                        LOG.debug("Watch List check: WatchList Xid '" + dpWatchListXid + "' has an active Maintenance Event and dataPointId (" + wrapper.id + ") is in this Watch List: totalWatchListsActiveMaintenanceEventsCount = " + totalWatchListsActiveMaintenanceEventsCount);
+                        //Add logic here to be executed when the current context point is in a Watch List and that Watch List has an active Maintenance Event
                     }
-               }else {
-                    if(alreadyProcessedWatchLists.containsKey(dpWatchListXid)){
-                       LOG.debug("WatchList block: This WatchList has activeMaintenanceEvent: watchList xid '" + dpWatchListXid + "'"  + " and dataPoint in this watchList is " + wrapper.id + " totalWatchListsActiveMaintenanceEventsCount= " + totalWatchListsActiveMaintenanceEventsCount);
-                       alreadyProcessedWatchListDataPoints.put(wrapper.id,1);
-
-                       //ops team to add some logic as the dataPointid in watchList
+                } else {
+                    if (alreadyProcessedWatchLists.containsKey(dpWatchListXid)) {
+                        LOG.debug("Watch List check: WatchList Xid '" + dpWatchListXid + "' has an active Maintenance Event and dataPointId (" + wrapper.id + ") is in this Watch List: totalWatchListsActiveMaintenanceEventsCount = " + totalWatchListsActiveMaintenanceEventsCount);
+                        alreadyProcessedWatchListDataPoints.put(wrapper.id, 1);
+                        //Add logic here to be executed when the current context point is in a Watch List and that Watch List has an active Maintenance Event
                     }
-               }
+                }
+            }
+        }
 
-         }
-       }
-     }
- }
+        if ((dsActiveMaintenanceEventsCount + dpActiveMaintenanceEventsCount + totalWatchListsActiveMaintenanceEventsCount) > 0) {
+            //Add logic here to be executed if the current context point has any type of active Maintenance Event linked to it
 
-
-
-
-
-
-
-
+        }
+    }
+}
