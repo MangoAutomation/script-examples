@@ -1,149 +1,120 @@
 
-//to gain access to standard java objects
-var Arrays = Java.type('java.util.Arrays');
-var ArrayList = Java.type('java.util.ArrayList');
-var Consumer = Java.type('java.util.function.Consumer');
+var dataSourceService = Java.type('com.infiniteautomation.mango.spring.service.DataSourceService');
+var dataSourceServiceClass = Common.getBean(dataSourceService.class);
 
-//spring application context
-var Common = Java.type('com.serotonin.m2m2.Common');
-
-//DAO
-var maintenanceEventDao = Java.type('com.serotonin.m2m2.maintenanceEvents.MaintenanceEventDao');
-var daoClass = Common.getBean(maintenanceEventDao.class);
-
-var maintenanceEventModel = Java.type('com.infiniteautomation.mango.rest.latest.model.MaintenanceEventModel');
-var eventModelClass = new maintenanceEventModel();
-
-//RQL related libraries
-var ASTNode = Java.type('net.jazdw.rql.parser.ASTNode');
-var RQLUtils = Java.type('com.infiniteautomation.mango.util.RQLUtils');
-var EventInstanceService = Java.type('com.infiniteautomation.mango.spring.service.EventInstanceService');
-var eventInstanceServiceClass = Common.getBean(EventInstanceService.class);
-
-//first check whether this Meta data point has any acitve maintenance events, if has return 0
- var metapointActiveMtcEventsCount = 0;
- var pointValueSum = 0;
- var dataPointXid = 'DP_a620e9ab-8760-4177-8c1a-fecea969652f'
- var isPointEnabled = RuntimeManager.isDataPointEnabled(dataPointXid);
- 
- if (isPointEnabled) {
-        metapointActiveMtcEventsCount = getPointXidActiveMaintenanceEvents(dataPointXid);
- } else {
-      return pointValueSum;
- }
-
- if(metapointActiveMtcEventsCount > 0)  {
-     return pointValueSum;
- } else {
-     var activeContextPointCount = 0;
- 
-     for (var key in EXTERNAL_POINTS) {
-      //get the point value of each context point
-      var contextPoint = this[key];
-      var wrapper = contextPoint.getDataPointWrapper();
-     if (wrapper.enabled) {
-         
-         //check this pointXid has any active MaintenanceEvents
-         var sumOfActiveMaintenanceEventsCount = getPointXidActiveMaintenanceEvents(wrapper.xid);
-         
-         if (sumOfActiveMaintenanceEventsCount !== null && sumOfActiveMaintenanceEventsCount > 0){
-             pointValueSum += 0;
-         } else {
-              pointValueSum += contextPoint.value;
-         }
-       
-        activeContextPointCount += 1;
-    }
-} 
-
-  if (activeContextPointCount > 0) {
-       return pointValueSum;
-  }
-
-}
-
-//Helper functions
-function fillDataPoints(model){
-    var xids = new ArrayList();
-    var addConsumer =  Java.extend(Consumer, {
-     accept: function(xid) {
-      xids.add(xid);
-    }
-  });
-  
-  daoClass.getPointXids(model.getId(), new addConsumer());
-  model.setDataPoints(xids.isEmpty() ? null : xids);
-}
- 
-//another helper function
-function fillDataSources(model){
-  var dsXids = new ArrayList();
-  var addConsumerDataSources =  Java.extend(Consumer, {
-  accept: function(xid) {
-      dsXids.add(xid);
-  }
-});
-daoClass.getSourceXids(model.getId(), new addConsumerDataSources());
-model.setDataSources(dsXids.isEmpty() ? null : dsXids);
-}
-
-//return total
-function getTotalCountOfActiveMaintenanceEvents(aList) {
-var totalCountOfActiveMaintenanceEvents = 0;
-  for(var element = 0; element < aList.size(); element++){
-      totalCountOfActiveMaintenanceEvents += aList.get(element);
-  }
-   return totalCountOfActiveMaintenanceEvents;
-}
-
-//function to call for each xid
+//alreadyProcessedDsXids = alreadyProcessedDataSourceXids
 var HashMap = Java.type('java.util.HashMap');
+var alreadyProcessedDataSourceXids = new HashMap();
+var alreadyProcessedDataPointXids = new HashMap();
+var alreadyProcessedWatchListXids = new HashMap();
 
-var maintenanceEventVO = Java.type('com.serotonin.m2m2.maintenanceEvents.MaintenanceEventVO');
-var eventVOClass = new maintenanceEventVO();
+var dsActiveMaintenanceEventsCount = 0;
+var dpActiveMaintenanceEventsCount = 0;
 
-//RQL related libraries
-var ASTNode = Java.type('net.jazdw.rql.parser.ASTNode');
-var RQLUtils = Java.type('com.infiniteautomation.mango.util.RQLUtils');
-var eventInstance = Java.type('com.infiniteautomation.mango.spring.service.EventInstanceService');
-var eventInstanceService = Common.getBean(eventInstance.class);
-var subSelectMap = new HashMap();
+//for watList related
+var alreadyProcessedWatchLists = new HashMap();
+var alreadyProcessedWatchListDataPoints = new HashMap();
 
-//function to return the active MaintenanceEvent count linked to pointXids
-function getPointXidActiveMaintenanceEvents(pointXid) {
- 
-var listOfActiveMaintenanceEvents = new ArrayList();
-var activeEventsCount = null;    
-//create a map to store results
-var HashMap = Java.type('java.util.HashMap');
-var map = new HashMap();
-var models = new ArrayList();
+//Instance of WatchListServiceClass
+var watchListService = Java.type('com.infiniteautomation.mango.spring.service.WatchListService');
+var watchListServiceClass = Common.getBean(watchListService.class);
 
-    var MyConsumer = Java.extend(Consumer, {
-        accept: function(vo) {
-        var model = new maintenanceEventModel(vo);
-        fillDataPoints(model);
-        fillDataSources(model);
-        models.add(model);
-        
-    var astNodeInitial = new ASTNode("eq", "typeName", 'MAINTENANCE');
-    var rql = RQLUtils.addAndRestriction(astNodeInitial, new ASTNode("eq", "rtnTs", null));
-        rql = RQLUtils.addAndRestriction(rql, new ASTNode("eq", "rtnApplicable", "Y"));
-        rql = RQLUtils.addAndRestriction(rql, new ASTNode("in", "typeRef1", model.id));
-           
-        activeEventsCount = eventInstanceServiceClass.customizedCount(rql);
-        listOfActiveMaintenanceEvents.add(activeEventsCount);
-        
-        //if(activeEventsCount != null && Number(activeEventsCount) > 0)
-               //print("This meta/context point has active maintenance events..")
-          }
-        });
-     
-        daoClass.getForDataPoint(pointXid, new MyConsumer());
-      return getTotalCountOfActiveMaintenanceEvents(listOfActiveMaintenanceEvents);
+//Instance of WatchListDAO class
+var watchListDAO = Java.type('com.infiniteautomation.mango.spring.dao.WatchListDao');
+var watchListDAOClass = Common.getBean(watchListDAO.class);
+
+//This variable contains watchListId, watchListMtcEventCount
+var maintenanceEventsInfo = getWatchListMaintenanceEventsInfo();
+
+var watchListActiveMaintenceEventsDataPointsInfo = getAllWatchListsActiveMaintenanceEventsDataPoints();
+var totalWatchListsActiveMaintenanceEventsCount = 0;
+var watchListsDataPoints = new HashMap();
+watchListsDataPoints = FetchWatchListsDataPoints();
+
+function FetchWatchListsDataPoints() {
+    for (var id = 0; id < watchListActiveMaintenceEventsDataPointsInfo.size(); id++) {
+        var record = watchListActiveMaintenceEventsDataPointsInfo.get(id);
+        watchListsDataPoints.put(record.get("dataPointId"), record.get("watchListXid"));
+    }
+    return watchListsDataPoints;
 }
 
+for (var key in EXTERNAL_POINTS) {
+    //get the point value of each context point
+    var contextPoint = this[key];
+    var wrapper = contextPoint.getDataPointWrapper();
 
+    if (wrapper.enabled) {
+        var dataSourceXid = wrapper.dataSourceXid.trim();
+        var dataSource = dataSourceServiceClass.get(dataSourceXid);
 
+        //  ************** dataSource level checking **************************
+        if (dataSourceXid != null && dataSourceXid.length() > 0) {
+            if (!alreadyProcessedDataSourceXids.containsKey(dataSourceXid)) {
+                //get dataSource active maintenance events count
+                dsActiveMaintenanceEventsCount = getTotalActiveMaintenanceEventsByDataSourceId(dataSource.id);
+                alreadyProcessedDataSourceXids.put(wrapper.dataSourceXid, dsActiveMaintenanceEventsCount);
+            } else { //retrieve existing dsactiveMaintenanceEvent
+                if (alreadyProcessedDataSourceXids.containsKey(wrapper.dataSourceXid)) {
+                    dsActiveMaintenanceEventsCount = alreadyProcessedDataSourceXids.get(wrapper.dataSourceXid);
+                }
+            }
+            if (dsActiveMaintenanceEventsCount > 0) {
+                LOG.debug("Data Source Check: Data source for dataPointId (" + wrapper.id + ") has an active Maintenance Event: dataSource Xid '" + wrapper.dataSourceXid + "'" + " dataSourceActiveMaintenanceEventsCount = " + dsActiveMaintenanceEventsCount);
+                //Add logic here to be executed when the data source of the current context point has an active Maintenance Event
 
+            }
+        }
 
+        //  ************** DataPoint level checking **************************
+        //since dataPoint's dataSource doesn't have activeMtcEvents,check whether dataPoint has activeMaintenanceEvents
+        if (dsActiveMaintenanceEventsCount === 0) {
+            if (!alreadyProcessedDataPointXids.containsKey(wrapper.xid)) {
+                dpActiveMaintenanceEventsCount = getTotalActiveMaintenanceEventsByDataPointXid(wrapper.xid);
+                alreadyProcessedDataPointXids.put(wrapper.xid, dpActiveMaintenanceEventsCount);
+            } else {
+                if (alreadyProcessedDataPointXids.containsKey(wrapper.xid)) {
+                    dpActiveMaintenanceEventsCount = alreadyProcessedDataPointXids.get(wrapper.xid);
+                }
+            }
+
+            if (dpActiveMaintenanceEventsCount > 0) {
+                LOG.debug("Data Point Check: dataPointId (" + wrapper.id + ") has an active Maintenance Event: dataPoint Xid '" + wrapper.xid + "  dpActiveMaintenanceEventsCount= " + dpActiveMaintenanceEventsCount);
+                //Add logic here to be executed when the current context point has an active Maintenance Event linked to the data point itself (but not the data source)
+
+            }
+        }
+
+        //***************** WatchList level checking for dataPoint activeMaintenanceEvent ****************************
+        /*
+         1. if dataPoint doesn't have activeMaintenanceEvent at dp level or ds level, then check watchlist level
+         2. if any of dataPoints in watchList has activeMaintenanceEvent at dp level, it will not check at watchList level
+       */
+        if ((dsActiveMaintenanceEventsCount === 0) && ((dpActiveMaintenanceEventsCount === 0))) {
+            totalWatchListsActiveMaintenanceEventsCount = 0;
+            if (watchListsDataPoints.containsKey(wrapper.id)) {
+                var dpWatchListXid = watchListsDataPoints.get(wrapper.id);
+                if (!alreadyProcessedWatchLists.containsKey(dpWatchListXid)) {
+                    if (dpWatchListXid != null && dpWatchListXid.trim().length() > 0) {
+                        totalWatchListsActiveMaintenanceEventsCount = totalWatchListsActiveMaintenanceEventsCount + 1;
+                        alreadyProcessedWatchLists.put(dpWatchListXid, 1);
+                        alreadyProcessedWatchListDataPoints.put(wrapper.id, 1);
+                        LOG.debug("Watch List check: WatchList Xid '" + dpWatchListXid + "' has an active Maintenance Event and dataPointId (" + wrapper.id + ") is in this Watch List: totalWatchListsActiveMaintenanceEventsCount = " + totalWatchListsActiveMaintenanceEventsCount);
+                        //Add logic here to be executed when the current context point is in a Watch List and that Watch List has an active Maintenance Event
+                    }
+                } else {
+                    if (alreadyProcessedWatchLists.containsKey(dpWatchListXid)) {
+                        LOG.debug("Watch List check: WatchList Xid '" + dpWatchListXid + "' has an active Maintenance Event and dataPointId (" + wrapper.id + ") is in this Watch List: totalWatchListsActiveMaintenanceEventsCount = " + totalWatchListsActiveMaintenanceEventsCount);
+                        alreadyProcessedWatchListDataPoints.put(wrapper.id, 1);
+                        //Add logic here to be executed when the current context point is in a Watch List and that Watch List has an active Maintenance Event
+                    }
+                }
+            }
+        }
+
+        if ((dsActiveMaintenanceEventsCount + dpActiveMaintenanceEventsCount + totalWatchListsActiveMaintenanceEventsCount) > 0) {
+            //Add logic here to be executed if the current context point has any type of active Maintenance Event linked to it
+
+        }
+    }
+}
