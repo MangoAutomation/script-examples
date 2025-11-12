@@ -17,116 +17,208 @@
  * Note: For OS linux is necessary install lsb_release
  */
 
+var Common = Java.type('com.serotonin.m2m2.Common');
+var mangoDataPath = Common.envProps.getProperty('paths.data').toString();
 var Runtime = Java.type('java.lang.Runtime');
+var rt = Runtime.getRuntime();
 var System = Java.type('java.lang.System');
 var ModuleRegistry = Java.type('com.serotonin.m2m2.module.ModuleRegistry');
 var InputStreamReader = Java.type('java.io.InputStreamReader');
 var BufferedReader = Java.type('java.io.BufferedReader');
 
-// --- HELPER FUNCTIONS ---
-
-/**
- * Gets the version of a Mango module by name.
- * @param {string} moduleName - The name of the module (e.g., "core", "udmi").
- * @returns {string} The module version or "ERROR" if it fails.
- */
-function getModuleVersion(moduleName) {
-  try {
-    var version = ModuleRegistry.getModule(moduleName).getVersion();
-    LOG.debug("Module version '" + moduleName + "': " + version);
-    return version;
-  } catch (e) {
-    LOG.error("Failed to get module version for '" + moduleName + "': " + e.message);
-    return 'ERROR';
+for (var i in EXTERNAL_POINTS) {
+  var configPoint = EXTERNAL_POINTS[i];
+  var configPointWrapper = configPoint.getDataPointWrapper();
+  if (!configPointWrapper.enabled) {
+    continue;
+  }
+  var locatorType = configPointWrapper.tags.locatorType;
+  if (!locatorType) {
+    LOG.error('Point ' + configPointWrapper.name + ' missing locatorType tag.');
+    configPoint.set('Missing locatorType tag.');
+    continue;
+  }
+  var locatorValue = configPointWrapper.tags.locatorValue;
+  if (!locatorValue) {
+    LOG.error('Point ' + configPointWrapper.name + ' missing locatorValue tag.');
+    configPoint.set('Missing locatorValue tag.');
+    continue;
+  }
+  LOG.debug('Processing point ' + configPointWrapper.name + ' (' + locatorType + ':' + locatorValue + ')');
+  switch (locatorType) {
+    case 'os':
+      configPoint.set(processOsLocatorType(locatorValue));
+      break;
+    case 'mango.version':
+      configPoint.set(processMangoVersionLocatorType(locatorValue));
+      break;
+    case 'java':
+      configPoint.set(processJavaLocatorType(locatorValue));
+      break;
+    case 'mango.properties':
+      configPoint.set(processMangoPropertiesLocatorType(locatorValue));
+      break;
+    case 'start-options':
+      configPoint.set(processStartOptionsLocatorType(locatorValue));
+      break;
+    default:
+      LOG.error('Unexpected locatorType: ' + locatorType);
+      configPoint.set('Unexpected locatorType: ' + locatorType);
   }
 }
 
-/**
- * Gets a system property.
- * @param {string} propertyName - The name of the property (e.g., "java.version").
- * @returns {string} The property value or "ERROR" if it fails.
- */
-function getSystemProperty(propertyName) {
+function processMangoVersionLocatorType(locatorValue) {
+  //Find the locatorValue for this Mango Version point in the ModuleRegistry
+  var module = ModuleRegistry.getModule(locatorValue);
+  if (!module) {
+    LOG.error('Version Locator module ' + locatorValue + ' not found.');
+    return 'Module ' + locatorValue + ' not found.';
+  }
+  var versionValue
   try {
-    var propertyValue = System.getProperty(propertyName).toString();
-    LOG.debug("System property '" + propertyName + "': " + propertyValue);
-    return propertyValue;
-  } catch (e) {
-    LOG.error("Failed to get system property '" + propertyName + "': " + e.message);
-    return 'ERROR';
+    //This method is not compatible in Mango 5.2 and earlier
+    versionValue = module.getVersion();
+  }
+  catch (err) {
+    LOG.debug(module.version);
+    //This method is compatible in Mango 5.2 and earlier
+    versionValue = ModuleRegistry.getModule(locatorValue).version;
+  }
+
+  LOG.debug(ModuleRegistry.getModule(locatorValue).version);
+  if (versionValue) {
+    LOG.debug('Version Locator ' + locatorValue + ' = ' + versionValue);
+    return versionValue;
+  }
+  else {
+    LOG.error('Version Locator ' + locatorValue + ' not found.');
+    return locatorValue + ' not found.';
   }
 }
 
-/**
- * Executes a system shell command and returns its output.
- * @param {string} command - The command to execute.
- * @returns {string[] | null} An array with the output lines, or null on error.
- */
-function runCommand(command) {
-  LOG.debug("Executing command: " + command);
-  try {
-    var process = Runtime.getRuntime().exec(command);
-    var reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-    var lines = [];
-    var line;
-    while ((line = reader.readLine()) !== null) {
-      lines.push(line);
-    }
-
-    var exitCode = process.waitFor();
-    LOG.debug("Command finished with exit code: " + exitCode);
-
-    if (exitCode !== 0) {
-      throw new Error("Command failed with exit code " + exitCode);
-    }
-    return lines;
-  } catch (e) {
-    LOG.error("Error executing command '" + command + "': " + e.message);
-    return null;
+function processJavaLocatorType(locatorValue) {
+  var javaValue = System.getProperty(locatorValue).toString();
+  if (javaValue) {
+    LOG.debug('Java Locator ' + locatorValue + ' = ' + javaValue);
+    return javaValue;
+  }
+  else {
+    LOG.error('Java Locator ' + locatorValue + ' not found.');
+    return locatorValue + ' not found.';
   }
 }
 
-// --- MAIN LOGIC ---
+function processMangoPropertiesLocatorType(locatorValue) {
+  var mangoPropertyValue = Common.envProps.getProperty(locatorValue).toString();
+  if (mangoPropertyValue) {
+    LOG.debug('Mango.Properties Locator ' + locatorValue + ' = ' + mangoPropertyValue);
+    return mangoPropertyValue;
+  }
+  else {
+    LOG.error('Mango.Properties Locator ' + locatorValue + ' not found.');
+    return locatorValue + ' not found.';
+  }
+}
 
-// Get all the information
-var mangoVersion = getModuleVersion('core');
-var udmiVersion = getModuleVersion('udmi');
-var javaVersion = getSystemProperty('java.version');
-var osType = getSystemProperty('os.name');
-
-var osRelease = '';
-var osDistributor = '';
-
-//OS Type (Windows/Linux/etc.)
-if (osType === 'Linux') {
-  var resultLines = runCommand('lsb_release -a');
-  if (resultLines) {
-    var osInfo = resultLines.reduce(function(acc, line) {
-      var parts = line.split(':', 2);
-      if (parts.length >= 2) {
-        var key = parts[0].trim();
-        var value = parts[1].trim();
-        acc[key] = value;
-      }
-      return acc;
-    }, {});
-
-    osDistributor = osInfo['Distributor ID'] || '';
-    osRelease = osInfo['Release'] || '';
+var osConfigParamKeys;
+var osConfigParamValues;
+function processOsLocatorType(locatorValue) {
+  //Check if the command has already been executed before running it
+  if (!osConfigParamKeys) {
+    var osConfigLines = runCommand('lsb_release -a');
+    osConfigParamKeys = new Array();
+    osConfigParamValues = new Array();
+    osConfigLines.forEach(parseOsConfigLines);
+  }
+  //Find the locatorValue for this OS point in osConfigParamKeys
+  var osConfigValue = osConfigParamValues[osConfigParamKeys.indexOf(locatorValue)];
+  if (osConfigValue) {
+    LOG.debug('OS Locator ' + locatorValue + ' = ' + osConfigValue);
+    return osConfigValue;
+  }
+  else {
+    LOG.error('OS Locator ' + locatorValue + ' not found.');
+    return locatorValue + ' not found.';
+  }
+}
+function parseOsConfigLines(value) {
+  LOG.debug('Processing OS config line: ' + value);
+  var lineParts = value.split(':');
+  if (lineParts.length <= 1) {
+    LOG.debug('Config line missing separator `:` ' + lineParts.toString());
   } else {
-    osDistributor = 'ERROR';
-    osRelease = 'ERROR';
+    osConfigParamKeys.push(lineParts[0].trim());
+    osConfigParamValues.push(lineParts[1].trim());
   }
 }
 
-LOG.debug("OS Distributor: " + osDistributor);
-LOG.debug("OS Release: " + osRelease);
 
-// Set the context variables to the data points
-var_mango_version.set(mangoVersion);
-var_udmi_version.set(udmiVersion);
-var_java_version.set(javaVersion);
-var_os_type.set(osType);
-var_os_release.set(osRelease);
-var_os_distributor.set(osDistributor);
+var startOptionsParams;
+function processStartOptionsLocatorType(locatorValue) {
+  //Check if the command has already been executed before running it
+  if (!startOptionsParams) {
+    var startOptionsLines = runCommandArray(['grep', '-v', '^#\\|^$', mangoDataPath + '/start-options.sh']);
+    startOptionsParams = new Array();
+    startOptionsLines.forEach(parseStartOptionsLines);
+  }
+  //Find the locatorValue for this OS point in startOptionsParamKeys
+  var matchedValues = startOptionsParams.filter(strStartsWith);
+  LOG.debug('matchedValues: ' + matchedValues.toString());
+  function strStartsWith(value) {
+    return value.startsWith(locatorValue);
+  }
+  if (matchedValues.length > 0) {
+    LOG.debug('Start Options Locator ' + locatorValue + ' = ' + matchedValues[0]);
+    return matchedValues[0];
+  }
+  else {
+    LOG.error('Start Options Locator ' + locatorValue + ' not found.');
+    return locatorValue + ' not found.';
+  }
+}
+function parseStartOptionsLines(value) {
+  LOG.debug('Processing Start Options line: ' + value);
+  var lineParts = value.trim().split('-');
+  if (lineParts.length <= 1) {
+    LOG.debug('Config line missing separator `-` ' + lineParts.toString());
+  }
+  lineParts.forEach(pushPart);
+  function pushPart(value) {
+    //Only push parameters that start with X
+    //Remove quotation marks
+    if (value.trim().substring(0,1) == 'X') {
+      startOptionsParams.push(value.trim().replace('"', ''));
+    }
+  }
+  LOG.debug(lineParts.toString());
+}
+
+
+function runCommand(commandToRun) {
+  return runCommandArray(commandToRun.split(' '));
+}
+
+function runCommandArray(commandArrayToRun) {
+  LOG.debug('Executing command: ' + commandArrayToRun.toString());
+  var logErrors = true;
+  var process = rt.exec(commandArrayToRun);
+  var bReader = java.io.BufferedReader;
+  var iStreamReader = java.io.InputStreamReader;
+  var line = String;
+  var commandOutputLines = new Array();
+  var returnValue = process.waitFor() === 0;
+  iStreamReader = new java.io.InputStreamReader(process.getInputStream());
+  bReader = new java.io.BufferedReader(iStreamReader);
+  while ((line = bReader.readLine()) != null) {
+    LOG.debug(line);
+    commandOutputLines.push(line);
+  }
+  if (logErrors) {
+    iStreamReader = new java.io.InputStreamReader(process.getErrorStream());
+    bReader = new java.io.BufferedReader(iStreamReader);
+    while ((line = bReader.readLine()) != null) {
+      LOG.error(line);
+    }
+  }
+  return commandOutputLines;
+}
