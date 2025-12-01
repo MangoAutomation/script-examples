@@ -1,22 +1,3 @@
-/**
- * Script to track Mango, Modules, and OS details
- * Last update Sept 2025
- *
- * Java Details
- * - Java version
- *
- * Mango Details
- * - Mango Version
- * - UDMI Version
- *
- * OS Details
- * - OS Type
- * - OS Release
- * - OS Distributor
- *
- * Note: For OS linux is necessary install lsb_release
- */
-
 var Common = Java.type('com.serotonin.m2m2.Common');
 var mangoDataPath = Common.envProps.getProperty('paths.data').toString();
 var Runtime = Java.type('java.lang.Runtime');
@@ -25,200 +6,374 @@ var System = Java.type('java.lang.System');
 var ModuleRegistry = Java.type('com.serotonin.m2m2.module.ModuleRegistry');
 var InputStreamReader = Java.type('java.io.InputStreamReader');
 var BufferedReader = Java.type('java.io.BufferedReader');
-
-for (var i in EXTERNAL_POINTS) {
-  var configPoint = EXTERNAL_POINTS[i];
-  var configPointWrapper = configPoint.getDataPointWrapper();
-  if (!configPointWrapper.enabled) {
-    continue;
-  }
-  var locatorType = configPointWrapper.tags.locatorType;
-  if (!locatorType) {
-    LOG.error('Point ' + configPointWrapper.name + ' missing locatorType tag.');
-    configPoint.set('Missing locatorType tag.');
-    continue;
-  }
-  var locatorValue = configPointWrapper.tags.locatorValue;
-  if (!locatorValue) {
-    LOG.error('Point ' + configPointWrapper.name + ' missing locatorValue tag.');
-    configPoint.set('Missing locatorValue tag.');
-    continue;
-  }
-  LOG.debug('Processing point ' + configPointWrapper.name + ' (' + locatorType + ':' + locatorValue + ')');
-  switch (locatorType) {
-    case 'os':
-      configPoint.set(processOsLocatorType(locatorValue));
-      break;
-    case 'mango.version':
-      configPoint.set(processMangoVersionLocatorType(locatorValue));
-      break;
-    case 'java':
-      configPoint.set(processJavaLocatorType(locatorValue));
-      break;
-    case 'mango.properties':
-      configPoint.set(processMangoPropertiesLocatorType(locatorValue));
-      break;
-    case 'start-options':
-      configPoint.set(processStartOptionsLocatorType(locatorValue));
-      break;
-    default:
-      LOG.error('Unexpected locatorType: ' + locatorType);
-      configPoint.set('Unexpected locatorType: ' + locatorType);
-  }
-}
-
-function processMangoVersionLocatorType(locatorValue) {
-  //Find the locatorValue for this Mango Version point in the ModuleRegistry
-  var module = ModuleRegistry.getModule(locatorValue);
-  if (!module) {
-    LOG.error('Version Locator module ' + locatorValue + ' not found.');
-    return 'Module ' + locatorValue + ' not found.';
-  }
-  var versionValue
-  try {
-    //This method is not compatible in Mango 5.2 and earlier
-    versionValue = module.getVersion();
-  }
-  catch (err) {
-    LOG.debug(module.version);
-    //This method is compatible in Mango 5.2 and earlier
-    versionValue = ModuleRegistry.getModule(locatorValue).version;
-  }
-
-  LOG.debug(ModuleRegistry.getModule(locatorValue).version);
-  if (versionValue) {
-    LOG.debug('Version Locator ' + locatorValue + ' = ' + versionValue);
-    return versionValue;
-  }
-  else {
-    LOG.error('Version Locator ' + locatorValue + ' not found.');
-    return locatorValue + ' not found.';
-  }
-}
-
-function processJavaLocatorType(locatorValue) {
-  var javaValue = System.getProperty(locatorValue).toString();
-  if (javaValue) {
-    LOG.debug('Java Locator ' + locatorValue + ' = ' + javaValue);
-    return javaValue;
-  }
-  else {
-    LOG.error('Java Locator ' + locatorValue + ' not found.');
-    return locatorValue + ' not found.';
-  }
-}
-
-function processMangoPropertiesLocatorType(locatorValue) {
-  var mangoPropertyValue = Common.envProps.getProperty(locatorValue).toString();
-  if (mangoPropertyValue) {
-    LOG.debug('Mango.Properties Locator ' + locatorValue + ' = ' + mangoPropertyValue);
-    return mangoPropertyValue;
-  }
-  else {
-    LOG.error('Mango.Properties Locator ' + locatorValue + ' not found.');
-    return locatorValue + ' not found.';
-  }
-}
+var SystemSettingsDaoInstance = Common.getBean(com.serotonin.m2m2.db.dao.SystemSettingsDao.class);
+var Comparator = Java.type('java.util.Comparator');
+var PublisherService = Common.getBean(com.infiniteautomation.mango.spring.service.PublisherService.class);
 
 var osConfigParamKeys;
 var osConfigParamValues;
-function processOsLocatorType(locatorValue) {
-  //Check if the command has already been executed before running it
-  if (!osConfigParamKeys) {
-    var osConfigLines = runCommand('lsb_release -a');
-    osConfigParamKeys = new Array();
-    osConfigParamValues = new Array();
-    osConfigLines.forEach(parseOsConfigLines);
-  }
-  //Find the locatorValue for this OS point in osConfigParamKeys
-  var osConfigValue = osConfigParamValues[osConfigParamKeys.indexOf(locatorValue)];
-  if (osConfigValue) {
-    LOG.debug('OS Locator ' + locatorValue + ' = ' + osConfigValue);
-    return osConfigValue;
-  }
-  else {
-    LOG.error('OS Locator ' + locatorValue + ' not found.');
-    return locatorValue + ' not found.';
-  }
-}
-function parseOsConfigLines(value) {
-  LOG.debug('Processing OS config line: ' + value);
-  var lineParts = value.split(':');
-  if (lineParts.length <= 1) {
-    LOG.debug('Config line missing separator `:` ' + lineParts.toString());
-  } else {
-    osConfigParamKeys.push(lineParts[0].trim());
-    osConfigParamValues.push(lineParts[1].trim());
-  }
-}
-
-
 var startOptionsParams;
-function processStartOptionsLocatorType(locatorValue) {
-  //Check if the command has already been executed before running it
-  if (!startOptionsParams) {
-    var startOptionsLines = runCommandArray(['grep', '-v', '^#\\|^$', mangoDataPath + '/start-options.sh']);
-    startOptionsParams = new Array();
-    startOptionsLines.forEach(parseStartOptionsLines);
-  }
-  //Find the locatorValue for this OS point in startOptionsParamKeys
-  var matchedValues = startOptionsParams.filter(strStartsWith);
-  LOG.debug('matchedValues: ' + matchedValues.toString());
-  function strStartsWith(value) {
-    return value.startsWith(locatorValue);
-  }
-  if (matchedValues.length > 0) {
-    LOG.debug('Start Options Locator ' + locatorValue + ' = ' + matchedValues[0]);
-    return matchedValues[0];
-  }
-  else {
-    LOG.error('Start Options Locator ' + locatorValue + ' not found.');
-    return locatorValue + ' not found.';
-  }
-}
-function parseStartOptionsLines(value) {
-  LOG.debug('Processing Start Options line: ' + value);
-  var lineParts = value.trim().split('-');
-  if (lineParts.length <= 1) {
-    LOG.debug('Config line missing separator `-` ' + lineParts.toString());
-  }
-  lineParts.forEach(pushPart);
-  function pushPart(value) {
-    //Only push parameters that start with X
-    //Remove quotation marks
-    if (value.trim().substring(0,1) == 'X') {
-      startOptionsParams.push(value.trim().replace('"', ''));
+
+var HashMap = Java.type("java.util.HashMap");
+monitoredValuesHashList = new HashMap();
+
+getAllMonitoredValues();
+
+for (var i in EXTERNAL_POINTS) {
+    var configPoint = EXTERNAL_POINTS[i];
+    var configPointWrapper = configPoint.getDataPointWrapper();
+    var configPointTags = configPointWrapper.tags;
+    if(configPointTags && !configPointTags.isEmpty()){ 
+        var locatorType = configPointWrapper.tags.locatorType;
+        if (!locatorType) {
+            LOG.error('Point ' + configPointWrapper.name + ' missing locatorType tag.');
+            configPoint.set('Missing locatorType tag.');
+            continue;
+        }
+        var locatorValue = configPointWrapper.tags.locatorValue;
+        if (!locatorValue) {
+            LOG.error('Point ' + configPointWrapper.name + ' missing locatorValue tag.');
+            configPoint.set('Missing locatorValue tag.');
+            continue;
+        }
+        LOG.debug('Processing point ' + configPointWrapper.name + ' (' + locatorType + ':' + locatorValue + ')');
+        
+        var locatorParam1 = configPointWrapper.tags.locatorParam1;
+        
+        if ((locatorType === 'publisher') && (!locatorParam1)) {
+            LOG.error('Point ' + configPointWrapper.name + ' missing locatorParam1 tag.');
+            configPoint.set('Missing locatorParam1 tag.');
+            continue;
+        }
+        
+        if(locatorType === 'publisher') {
+            LOG.debug('Processing point ' + configPointWrapper.name + ' (' + locatorType + ':' + locatorValue +  ':' + locatorParam1 + ')');
+        } else {
+            LOG.debug('Processing point ' + configPointWrapper.name + ' (' + locatorType + ':' + locatorValue + ')');
+        }
+        
+        switch (locatorType) {
+            case 'os':
+                configPoint.set(processOsLocatorType(locatorValue));
+                break;
+            case 'mango.version':
+                configPoint.set(processMangoVersionLocatorType(locatorValue));
+                break;
+            case 'java':
+                configPoint.set(processJavaLocatorType(locatorValue));
+                break;
+            case 'mango.properties':
+                configPoint.set(processMangoPropertiesLocatorType(locatorValue));
+                break;
+            case 'start-options':
+                configPoint.set(processStartOptionsLocatorType(locatorValue));
+                break;
+            case 'mango.system.settings':
+                configPoint.set(processSystemSettingsLocatorType(locatorValue));
+                break;
+            case 'mango.system.metrics':
+                configPoint.set(processSystemMetrisLocatorType(locatorValue));
+                break; 
+            case 'publisher':
+                configPoint.set(processPublisherLocatorType(locatorValue,locatorParam1));
+                break;     
+            default:
+                LOG.error('Unexpected locatorType: ' + locatorType);
+                configPoint.set('Unexpected locatorType: ' + locatorType);
+        }
+    } else{
+        LOG.error('Missing tags for this Point: ' + configPointWrapper.name);
+        configPoint.set('Missing tags');
     }
-  }
-  LOG.debug(lineParts.toString());
 }
 
+function processMangoVersionLocatorType(locatorValue) {
+    //Find the locatorValue for this Mango Version point in the ModuleRegistry
+    var versionValue = ModuleRegistry.getModule(locatorValue).getVersion();
+    if (versionValue) {
+        LOG.debug('Version Locator ' + locatorValue + ' = ' + versionValue);
+        return versionValue;
+    }else {
+        LOG.error('Version Locator ' + locatorValue + ' not found.');
+        return locatorValue + ' not found.';
+    }
+}
+
+function processJavaLocatorType(locatorValue) {
+    var javaValue = System.getProperty(locatorValue).toString();
+    if (javaValue) {
+        LOG.debug('Java Locator ' + locatorValue + ' = ' + javaValue);
+        return javaValue;
+    } else {
+        LOG.error('Java Locator ' + locatorValue + ' not found.');
+        return locatorValue + ' not found.';
+    }
+}
+
+function processMangoPropertiesLocatorType(locatorValue) {
+    var mangoPropertyValue = Common.envProps.getProperty(locatorValue).toString();
+    if (mangoPropertyValue) {
+        LOG.debug('Mango.Properties Locator ' + locatorValue + ' = ' + mangoPropertyValue);
+        return mangoPropertyValue;
+    } else {
+        LOG.error('Mango.Properties Locator ' + locatorValue + ' not found.');
+        return locatorValue + ' not found.';
+    }
+}
+
+function processOsLocatorType(locatorValue) {
+    try{
+        //Check if the command has already been executed before running it
+        if (!osConfigParamKeys) {
+            var osConfigLines = runCommand('lsb_release -a');
+            osConfigParamKeys = new Array();
+            osConfigParamValues = new Array();
+            osConfigLines.forEach(parseOsConfigLines);
+        }
+        //Find the locatorValue for this OS point in osConfigParamKeys
+        var osConfigValue = osConfigParamValues[osConfigParamKeys.indexOf(locatorValue)];
+        if (osConfigValue) {
+            LOG.debug('OS Locator ' + locatorValue + ' = ' + osConfigValue);
+            return osConfigValue;
+        }else {
+            LOG.error('OS Locator ' + locatorValue + ' not found.');
+            return locatorValue + ' not found.';
+        }
+    }catch(err){
+        LOG.error('OS Locator ' + locatorValue + ' ' +  err.getMessage()); 
+        return err.getMessage();
+    }
+}
+
+function parseOsConfigLines(value) {
+    LOG.debug('Processing OS config line: ' + value);
+    var lineParts = value.split(':');
+    if (lineParts.length <= 1) {
+        LOG.debug('Config line missing separator `:` ' + lineParts.toString());
+    } else {
+        osConfigParamKeys.push(lineParts[0].trim());
+        osConfigParamValues.push(lineParts[1].trim());
+    }
+}
+
+function processStartOptionsLocatorType(locatorValue) {
+    //Check if the command has already been executed before running it
+    if (!startOptionsParams) {
+        var startOptionsLines = runCommandArray(['grep', '-v', '^#\\|^$', mangoDataPath + '/start-options.sh']);
+        startOptionsParams = new Array();
+        startOptionsLines.forEach(parseStartOptionsLines);
+    }
+    //Find the locatorValue for this OS point in startOptionsParamKeys
+    var matchedValues = startOptionsParams.filter(strStartsWith);
+    LOG.debug('matchedValues: ' + matchedValues.toString());
+    function strStartsWith(value) {
+        return value.startsWith(locatorValue);
+    }
+    if (matchedValues.length > 0) {
+        LOG.debug('Start Options Locator ' + locatorValue + ' = ' + matchedValues[0]);
+        return matchedValues[0];
+    } else {
+        LOG.error('Start Options Locator ' + locatorValue + ' not found.');
+        return locatorValue + ' not found.';
+    }
+}
+
+function parseStartOptionsLines(value) {
+    LOG.debug('Processing Start Options line: ' + value);
+    var lineParts = value.trim().split('-');
+    if (lineParts.length <= 1) {
+        LOG.debug('Config line missing separator `-` ' + lineParts.toString());
+    }
+    lineParts.forEach(pushPart);
+    function pushPart(value) {
+        //Only push parameters that start with X
+        //Remove quotation marks
+        if (value.trim().substring(0,1) == 'X') {
+            startOptionsParams.push(value.trim().replace('"', ''));
+        }
+    }
+    LOG.debug(lineParts.toString());
+}
 
 function runCommand(commandToRun) {
-  return runCommandArray(commandToRun.split(' '));
+    return runCommandArray(commandToRun.split(' '));
 }
 
 function runCommandArray(commandArrayToRun) {
-  LOG.debug('Executing command: ' + commandArrayToRun.toString());
-  var logErrors = true;
-  var process = rt.exec(commandArrayToRun);
-  var bReader = java.io.BufferedReader;
-  var iStreamReader = java.io.InputStreamReader;
-  var line = String;
-  var commandOutputLines = new Array();
-  var returnValue = process.waitFor() === 0;
-  iStreamReader = new java.io.InputStreamReader(process.getInputStream());
-  bReader = new java.io.BufferedReader(iStreamReader);
-  while ((line = bReader.readLine()) != null) {
-    LOG.debug(line);
-    commandOutputLines.push(line);
-  }
-  if (logErrors) {
-    iStreamReader = new java.io.InputStreamReader(process.getErrorStream());
+    LOG.debug('Executing command: ' + commandArrayToRun.toString());
+    var logErrors = true;
+    var process = rt.exec(commandArrayToRun);
+    var bReader = java.io.BufferedReader;
+    var iStreamReader = java.io.InputStreamReader;
+    var line = String;
+    var commandOutputLines = new Array();
+    var returnValue = process.waitFor() === 0;
+    iStreamReader = new java.io.InputStreamReader(process.getInputStream());
     bReader = new java.io.BufferedReader(iStreamReader);
     while ((line = bReader.readLine()) != null) {
-      LOG.error(line);
+        LOG.debug(line);
+        commandOutputLines.push(line);
+    } 
+    if (logErrors) {
+        iStreamReader = new java.io.InputStreamReader(process.getErrorStream());
+        bReader = new java.io.BufferedReader(iStreamReader);
+        while ((line = bReader.readLine()) != null) {
+           LOG.error(line);
+        }    
     }
-  }
-  return commandOutputLines;
+    return commandOutputLines;
 }
+
+function processSystemSettingsLocatorType(locatorValue){
+    var systemSettings = SystemSettingsDaoInstance.getAllSystemSettingsAsCodes();
+    var systemSettingValue = systemSettings.get(locatorValue);
+   
+    if(systemSettingValue === null || systemSettingValue === undefined){
+         LOG.debug('System Settings key missing..');
+    } else {
+        return systemSettingValue;
+    }
+}
+
+function getAllMonitoredValues() {
+    var monitoredValuesList = Common.MONITORED_VALUES.getMonitors();
+    var translations = Common.getTranslations();
+    
+    for (var item=0; item < monitoredValuesList.size(); item++){
+         var monitoredValuesModel = monitoredValuesList.get(item);
+         var monitoredKey = monitoredValuesModel.getName().translate(translations);
+         var monitoredValue = monitoredValuesModel.getValue();
+         if(monitoredValue) {
+              monitoredValuesHashList.put(monitoredKey,monitoredValue);
+         }
+    }
+}
+
+function processSystemMetrisLocatorType(locatorValue){
+    return  monitoredValuesHashList.get(locatorValue);
+}
+  
+function processPublisherLocatorType(locatorValue,locatorParam1){
+    try{
+        var ObjectMapper = Java.type('com.fasterxml.jackson.databind.ObjectMapper');
+        var AbstractPublisherModel = Java.type('com.infiniteautomation.mango.rest.latest.model.publisher.AbstractPublisherModel');
+        var LifeCycleClass = Java.type('com.serotonin.m2m2.Lifecycle').class;
+        var LifeCycleInstance = Common.getBean(LifeCycleClass);
+        var ContextField = LifeCycleInstance.getClass().getDeclaredField('context');
+        ContextField.setAccessible(true);
+        var Context = ContextField.get(LifeCycleInstance);
+        
+        var ServletHandler = Context.getServletHandler();
+        var Servlet = ServletHandler.getServlet("restV3DispatcherServlet").getServlet();
+        var RestV3Context = Servlet.getWebApplicationContext();
+        var RestModelMapperClass = Java.type('com.infiniteautomation.mango.rest.latest.model.RestModelMapper').class;
+        var RestModelMapperInstance = RestV3Context.getBean(RestModelMapperClass);
+        
+        //get the bean named restObjectMapper and make sure it is of type ObjectMapper
+        var mapperInstance = Common.getBean(ObjectMapper.class,"restObjectMapper");
+        var PublisherVO= PublisherService.get(locatorParam1); 
+        var AbstractPublisherModelObj = RestModelMapperInstance.map(PublisherVO, AbstractPublisherModel.class, Common.getUser()); 
+        var PublisherJsonString = mapperInstance.writerWithDefaultPrettyPrinter().writeValueAsString(AbstractPublisherModelObj);
+      
+        return getPublisherLocatorTypePropertyValue(PublisherJsonString,locatorValue);
+        
+    } catch(err){
+        LOG.error('Publisher locatorParam1: ' + locatorParam1 + ' ' +  err.message);
+    }
+   
+   }
+   
+function getPublisherLocatorTypePropertyValue(jsonObject,path){
+      var fetchedValue = getJsonValue(jsonObject,path);
+      if (fetchedValue !== undefined){ 
+        return fetchedValue.toString();
+    }
+ }
+   
+function getJsonValue(jsonObject,path){
+   if (typeof jsonObject === 'string') { jsonObject = JSON.parse(jsonObject) };
+        try{
+            if((typeof jsonObject === 'object') && (jsonObject !== null)) {
+                var extractedKeys = path.split('.');
+                var currentObject = jsonObject;
+                
+                for (var i=0; i < extractedKeys.length; i++){
+                  var key = extractedKeys[i];
+                  LOG.debug("looping key is..." + key);
+                  LOG.debug("currentObject hasOwnProperty " + key + ":" + currentObject.hasOwnProperty(key)) ;
+                  if(currentObject.hasOwnProperty(key)){
+                    var currentObject = currentObject[key];
+                    this.fetchedLocatorValue = currentObject.toString();
+                  }else{
+                      LOG.debug("no such key:" + key + " exists.");
+                  }
+                }      
+           } else {
+                LOG.debug("empty object receioved."); 
+                return 'undefined';
+           }
+        }catch(err){
+            LOG.error('Publisher Locator testing' + ' ' +  err.message); 
+        }
+      return this.fetchedLocatorValue;
+} 
+
+function getValueBackup(jsonObject,path){
+   if (typeof jsonObject === 'string') { jsonObject = JSON.parse(jsonObject) };
+        try{
+            if((typeof jsonObject === 'object') && (jsonObject !== null)) {
+                var extractedKeys = path.split('.');
+                LOG.debug("extractedKeys.." + extractedKeys);
+                var currentObject = jsonObject;
+                for (var i=0; i < extractedKeys.length; i++){
+                  var key = extractedKeys[i];
+                  if(currentObject.hasOwnProperty(key)){
+                    var currentObject = currentObject[key];
+                    this.fetchedLocatorValue = currentObject.toString();
+                  }else{
+                      LOG.debug("no such key with name " + key + " exists.");
+                  }
+                }      
+           } else {
+                LOG.debug("Empty object receioved."); 
+                return 'undefined';
+           }
+        }catch(err){
+            LOG.error('Publisher Locator ' + ' ' +  err.message); 
+        }
+      return this.fetchedLocatorValue;
+} 
+   
+function getTestJson(){
+   var jsonString =  {
+                          "abc": {
+                            "test": {
+                              "test2": {
+                                "test4": "Critical Alarm",
+                                "value": 123,
+                                "flag": true
+                              },
+                              "anotherKey": "Modbus Device"
+                            },
+                            "simpleKey": "SNMP Device",
+                            "testArray": [
+                              {
+                                "Name": "test1"
+                              }
+                            ]
+                                                  },
+                          "root": {
+                            "node1": {
+                              "node2": {
+                                "node3": "Deep Node Level"
+                              }
+                            },
+                            "list": {
+                              "itemA": "Item A Value",
+                              "itemB": "Item B Value"
+                            }
+                          }
+                        }
+     return jsonString;
+ }
+ 
