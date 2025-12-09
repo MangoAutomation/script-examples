@@ -17,8 +17,6 @@ var startOptionsParams;
 var HashMap = Java.type("java.util.HashMap");
 monitoredValuesHashList = new HashMap();
 
-getAllMonitoredValues();
-
 for (var i in EXTERNAL_POINTS) {
     var configPoint = EXTERNAL_POINTS[i];
     var configPointWrapper = configPoint.getDataPointWrapper();
@@ -36,22 +34,16 @@ for (var i in EXTERNAL_POINTS) {
             configPoint.set('Missing locatorValue tag.');
             continue;
         }
-        LOG.debug('Processing point ' + configPointWrapper.name + ' (' + locatorType + ':' + locatorValue + ')');
-        
         var locatorParam1 = configPointWrapper.tags.locatorParam1;
-        
+
         if ((locatorType === 'publisher') && (!locatorParam1)) {
             LOG.error('Point ' + configPointWrapper.name + ' missing locatorParam1 tag.');
             configPoint.set('Missing locatorParam1 tag.');
             continue;
         }
-        
-        if(locatorType === 'publisher') {
-            LOG.debug('Processing point ' + configPointWrapper.name + ' (' + locatorType + ':' + locatorValue +  ':' + locatorParam1 + ')');
-        } else {
-            LOG.debug('Processing point ' + configPointWrapper.name + ' (' + locatorType + ':' + locatorValue + ')');
-        }
-        
+
+        LOG.debug('Processing point ' + configPointWrapper.name + ' (' + locatorType + ':' + locatorValue + ')')
+
         switch (locatorType) {
             case 'os':
                 configPoint.set(processOsLocatorType(locatorValue));
@@ -66,13 +58,15 @@ for (var i in EXTERNAL_POINTS) {
                 configPoint.set(processMangoPropertiesLocatorType(locatorValue));
                 break;
             case 'start-options':
+                processStartOptionsParams();
                 configPoint.set(processStartOptionsLocatorType(locatorValue));
                 break;
             case 'mango.system.settings':
                 configPoint.set(processSystemSettingsLocatorType(locatorValue));
                 break;
             case 'mango.system.metrics':
-                configPoint.set(processSystemMetrisLocatorType(locatorValue));
+                getAllMonitoredValues();
+                configPoint.set(processSystemMetricsLocatorType(locatorValue));
                 break; 
             case 'publisher':
                 configPoint.set(processPublisherLocatorType(locatorValue,locatorParam1));
@@ -156,13 +150,16 @@ function parseOsConfigLines(value) {
     }
 }
 
-function processStartOptionsLocatorType(locatorValue) {
-    //Check if the command has already been executed before running it
-    if (!startOptionsParams) {
+function processStartOptionsParams(){
+   //Check if the command has already been executed before running it
+   if (!startOptionsParams) {
         var startOptionsLines = runCommandArray(['grep', '-v', '^#\\|^$', mangoDataPath + '/start-options.sh']);
         startOptionsParams = new Array();
         startOptionsLines.forEach(parseStartOptionsLines);
-    }
+   }
+}
+
+function processStartOptionsLocatorType(locatorValue) {
     //Find the locatorValue for this OS point in startOptionsParamKeys
     var matchedValues = startOptionsParams.filter(strStartsWith);
     LOG.debug('matchedValues: ' + matchedValues.toString());
@@ -229,7 +226,8 @@ function processSystemSettingsLocatorType(locatorValue){
     var systemSettingValue = systemSettings.get(locatorValue);
    
     if(systemSettingValue === null || systemSettingValue === undefined){
-         LOG.debug('System Settings key missing..');
+         LOG.debug('System Settings key not found..');
+         return locatorValue + ' not found.';
     } else {
         return systemSettingValue;
     }
@@ -249,8 +247,13 @@ function getAllMonitoredValues() {
     }
 }
 
-function processSystemMetrisLocatorType(locatorValue){
-    return  monitoredValuesHashList.get(locatorValue);
+function processSystemMetricsLocatorType(locatorValue){
+   var systemMetricsValue = monitoredValuesHashList.get(locatorValue);
+   if(systemMetricsValue == null){
+     LOG.error(locatorValue + " not found." );
+     return locatorValue + " not found.";
+   }
+    return  systemMetricsValue;
 }
   
 function processPublisherLocatorType(locatorValue,locatorParam1){
@@ -271,26 +274,36 @@ function processPublisherLocatorType(locatorValue,locatorParam1){
         
         //get the bean named restObjectMapper and make sure it is of type ObjectMapper
         var mapperInstance = Common.getBean(ObjectMapper.class,"restObjectMapper");
-        var PublisherVO= PublisherService.get(locatorParam1); 
-        var AbstractPublisherModelObj = RestModelMapperInstance.map(PublisherVO, AbstractPublisherModel.class, Common.getUser()); 
+        var PublisherVO= PublisherService.get(locatorParam1);
+        var AbstractPublisherModelObj = RestModelMapperInstance.map(PublisherVO, AbstractPublisherModel.class, Common.getUser());
+
         var PublisherJsonString = mapperInstance.writerWithDefaultPrettyPrinter().writeValueAsString(AbstractPublisherModelObj);
-      
-        return getPublisherLocatorTypePropertyValue(PublisherJsonString,locatorValue);
-        
+        if(PublisherJsonString == null || String(PublisherJsonString).trim() === ""){
+          LOG.error('locatorParam1 ' + locatorParam1 + " returned empty JSON string. locatorValue: " + locatorValue);
+        } else {
+          LOG.debug('locatorParam1 ' + locatorParam1 + " successfully returned Publisher. Publisher JSON string : " + PublisherJsonString);
+          var publisherLocatorValue = getPublisherLocatorTypePropertyValue(PublisherJsonString,locatorValue);
+        }
+
+        if(publisherLocatorValue == null || publisherLocatorValue === ""){
+          LOG.error('Publisher Locator ' + locatorValue + ' not found.');
+          return 'Publisher Locator ' + locatorValue + ' not found.';
+        }
+        return publisherLocatorValue;
     } catch(err){
-        LOG.error('Publisher locatorParam1: ' + locatorParam1 + ' ' +  err.message);
+        LOG.error('Publisher locatorParam1: ' + locatorParam1 + ' locatorValue: ' + locatorValue + ' ' +  err.message);
     }
-   
    }
    
 function getPublisherLocatorTypePropertyValue(jsonObject,path){
       var fetchedValue = getJsonValue(jsonObject,path);
       if (fetchedValue !== undefined){ 
         return fetchedValue.toString();
-    }
+     }
  }
    
 function getJsonValue(jsonObject,path){
+   LOG.debug('Processing jsonObject: ' + jsonObject + " path: " + path);
    if (typeof jsonObject === 'string') { jsonObject = JSON.parse(jsonObject) };
         try{
             if((typeof jsonObject === 'object') && (jsonObject !== null)) {
@@ -309,71 +322,14 @@ function getJsonValue(jsonObject,path){
                   }
                 }      
            } else {
-                LOG.debug("empty object receioved."); 
+                LOG.debug("empty object received.");
                 return 'undefined';
            }
         }catch(err){
-            LOG.error('Publisher Locator testing' + ' ' +  err.message); 
+            LOG.error("Error in parsing path " + path + " in json object '" + jsonObject +  + ' ' +  err.message);
         }
       return this.fetchedLocatorValue;
 } 
 
-function getValueBackup(jsonObject,path){
-   if (typeof jsonObject === 'string') { jsonObject = JSON.parse(jsonObject) };
-        try{
-            if((typeof jsonObject === 'object') && (jsonObject !== null)) {
-                var extractedKeys = path.split('.');
-                LOG.debug("extractedKeys.." + extractedKeys);
-                var currentObject = jsonObject;
-                for (var i=0; i < extractedKeys.length; i++){
-                  var key = extractedKeys[i];
-                  if(currentObject.hasOwnProperty(key)){
-                    var currentObject = currentObject[key];
-                    this.fetchedLocatorValue = currentObject.toString();
-                  }else{
-                      LOG.debug("no such key with name " + key + " exists.");
-                  }
-                }      
-           } else {
-                LOG.debug("Empty object receioved."); 
-                return 'undefined';
-           }
-        }catch(err){
-            LOG.error('Publisher Locator ' + ' ' +  err.message); 
-        }
-      return this.fetchedLocatorValue;
-} 
-   
-function getTestJson(){
-   var jsonString =  {
-                          "abc": {
-                            "test": {
-                              "test2": {
-                                "test4": "Critical Alarm",
-                                "value": 123,
-                                "flag": true
-                              },
-                              "anotherKey": "Modbus Device"
-                            },
-                            "simpleKey": "SNMP Device",
-                            "testArray": [
-                              {
-                                "Name": "test1"
-                              }
-                            ]
-                                                  },
-                          "root": {
-                            "node1": {
-                              "node2": {
-                                "node3": "Deep Node Level"
-                              }
-                            },
-                            "list": {
-                              "itemA": "Item A Value",
-                              "itemB": "Item B Value"
-                            }
-                          }
-                        }
-     return jsonString;
- }
+
  
