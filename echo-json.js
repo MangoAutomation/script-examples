@@ -1,7 +1,9 @@
 /**
  * This example reads JSON from the request body and echos it back in the response.
  * To execute this script from the default file store:
- * POST: rest/latest/script/eval-file-store/default/script-examples/echo-json.js
+ * Method: POST
+ * URL: rest/latest/script/eval-file-store/default/script-examples/echo-json.js
+ * BODY: {"message": "Test"}
  */
 
 // read all the lines from the request body
