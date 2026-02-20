@@ -7,8 +7,16 @@ const DSL = Java.type('org.jooq.impl.DSL');
 const SerializationHelper = Java.type('com.serotonin.util.SerializationHelper');
 const MangoPermission = Java.type('com.infiniteautomation.mango.permission.MangoPermission');
 
-const configuration = Common.databaseProxy.getConfig();
-const create = DSL.using(configuration);
+// databaseProxy was moved out of Common in Mango 4.3.
+
+// Use these 2 lines in 4.2 and earlier
+// const configuration = Common.databaseProxy.getConfig();
+// const create = DSL.using(configuration);
+
+// Use these 3 lines in 4.3 and later
+const DatabaseProxy = Java.type('com.serotonin.m2m2.db.DatabaseProxy');
+const proxy = Common.getBean(DatabaseProxy);
+const create = proxy.getContext();
 
 const idField = DSL.field('id');
 const dataField = DSL.field('data');
