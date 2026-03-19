@@ -286,9 +286,9 @@ Scripts that create large volumes of data or simulate high-throughput scenarios.
 | `generatePointValues.js` | ✅ | Requires specific point XIDs — update before running |
 | `generatePointValues_rad-3843.js` | ✅ | Scaled to 30 minutes history; requires specific point XIDs |
 | `query-benchmarks.js` | ✅ | Fixed: `DataPointTagsDao.getInstance()` → `runtimeContext.getBean()`; requires benchmark user (run `create-users.js` first) |
-| `setup-performance-test-datasources.js` | ⚠️ | Fixed: `ModuleRegistry` → `runtimeContext.getBean()`; requires Persistent TCP module (validation fails without it) |
+| `setup-performance-test-datasources.js` | ✅ | Fixed: `ModuleRegistry` → `runtimeContext.getBean()`; requires Persistent TCP module |
 | `setup-performance-test-publishers.js` | ✅ | Fixed: `ModuleRegistry` → `runtimeContext.getBean()`; `setDataTypeId()` → `setDataType()`; requires Persistent TCP module for publisher |
-| `setup-performance-test-publishers-v5.js` | ⚠️ | Fixed: `ModuleRegistry` → `runtimeContext.getBean()`; requires Persistent TCP module (validation fails without it) |
+| `setup-performance-test-publishers-v5.js` | ✅ | Fixed: `ModuleRegistry` → `runtimeContext.getBean()`; requires Persistent TCP module |
 | `v4_generatePublisherJsonFromUnpublishedPoints.js` | ✅ | Requires `your-query-output.csv` in default filestore |
 
 ---
