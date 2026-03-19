@@ -11,7 +11,9 @@ const ILifecycleState = Java.type('com.serotonin.util.ILifecycleState');
 const Collectors = Java.type('java.util.stream.Collectors');
 const PointValueTime = Java.type('com.serotonin.m2m2.rt.dataImage.PointValueTime');
 const NumericValue = Java.type('com.serotonin.m2m2.rt.dataImage.types.NumericValue');
+const AbstractTimer = Java.type('com.serotonin.timer.AbstractTimer');
 const runtimeManager = runtimeContext.getBean(RuntimeManager.class);
+const timer = runtimeContext.getBean(AbstractTimer.class);
 
 //Must match the data type for the point, this will work on Numeric data points
 const UNRELIABLE_VALUE = new NumericValue(-1.0);
@@ -58,7 +60,7 @@ dsRTList.forEach(function(element, index) {
     }
     //Stream is closed, now I will set all my points to UNRELIABLE_VALUE at the curren time
     // Note I could choose any time for this, even the time of the current value if there is one on my point
-    const timeToSetUnreliable = java.lang.System.currentTimeMillis();
+    const timeToSetUnreliable = timer.getTimeSource().millis();
     
     //Note I could define a set point source here that would annotate the value, however by leaving this null the value will be saved asychronously to the
     // database but immediately be available in the point cache.

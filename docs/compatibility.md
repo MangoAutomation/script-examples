@@ -44,16 +44,16 @@ Scripts that adjust log levels or trigger JVM-level operations. Reversible and l
 ## `export/` — Export and reporting
 Scripts that generate output (CSV, JSON, etc.) or serve data via the HTTP response. Read-only with respect to Mango state.
 
-| Script | Status | Notes |
-|---|---|---|
-| `convert_server_configuration_to_simulation.js` | ⚠️ | Requires `export.json` in default filestore; script itself is compatible |
-| `convert_to_virtual.js` | ✅ | |
-| `echo-json.js` | ✅ | Requires JSON body in POST request; requires `Access request/response objects` permission |
-| `export_users_csv.js` | ✅ | |
-| `globalContext.js` | ❌ | `hasBinding`/`addBinding`/`getBinding`/`removeBinding` do not exist in filestore script context; no replacement available |
-| `httpGetRequest.js` | ✅ | Fixed: `HttpBuilder` not available in filestore scripts → `java.net.http.HttpClient` |
-| `point-value-report-csv.js` | ✅ | Fixed: `Common.getMillis()` removed → JS arithmetic; `HttpBuilder` → `java.net.http.HttpClient` |
-| `runPurgeDefinition.js` | ✅ | Fixed: `ModuleRegistry` sandbox-blocked → `runtimeContext.getBean()`; `Common.timer` → `ZonedDateTime.now()`; requires Access module |
+| Script | Status | Notes                                                                                                                                                                         |
+|---|---|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `convert_server_configuration_to_simulation.js` | ⚠️ | Requires `export.json` in default filestore; script itself is compatible                                                                                                      |
+| `convert_to_virtual.js` | ✅ |                                                                                                                                                                               |
+| `echo-json.js` | ✅ | Requires JSON body in POST request; requires `Access request/response objects` permission                                                                                     |
+| `export_users_csv.js` | ✅ |                                                                                                                                                                               |
+| `globalContext.js` | ❌ | `hasBinding`/`addBinding`/`getBinding`/`removeBinding` do not exist in filestore script context; no replacement available requires https://github.com/RadixIoT/mango/pull/994 |
+| `httpGetRequest.js` | ✅ | Fixed: `HttpBuilder` not available in filestore scripts → `java.net.http.HttpClient`                                                                                          |
+| `point-value-report-csv.js` | ✅ | Fixed: `Common.getMillis()` removed → JS arithmetic; `HttpBuilder` → `java.net.http.HttpClient`                                                                               |
+| `runPurgeDefinition.js` | ✅ | Fixed: `ModuleRegistry` sandbox-blocked → `runtimeContext.getBean()`; `Common.timer` → `ZonedDateTime.now()`; requires Access module                                          |
 
 ---
 

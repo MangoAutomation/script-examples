@@ -11,11 +11,13 @@ const TranslatableMessage = Java.type('com.serotonin.m2m2.i18n.TranslatableMessa
 const EventDetectorDao = Java.type('com.serotonin.m2m2.db.dao.EventDetectorDao');
 const DataPointEventType = Java.type('com.serotonin.m2m2.rt.event.type.DataPointEventType');
 const EventManager = Java.type('com.serotonin.m2m2.rt.EventManager');
+const AbstractTimer = Java.type('com.serotonin.timer.AbstractTimer');
 
 // import services
 const dataPointService = services.dataPointService;
 const eventDetectorDao = runtimeContext.getBean(EventDetectorDao.class);
 const eventManager = runtimeContext.getBean(EventManager.class);
+const timer = runtimeContext.getBean(AbstractTimer.class);
 
 const eventsPerDataPoint = 10; // number of events per data point
 const limit = 10; //Count of data points to add events to, orderd by id
@@ -34,7 +36,7 @@ dataPointService.buildQuery()
 
                     for(var i=0; i<eventsPerDataPoint; i++) {
                         eventManager.raiseEvent(type,
-                        java.lang.System.currentTimeMillis(),
+                        timer.getTimeSource().millis(),
                          false, AlarmLevels.INFORMATION,
                          new TranslatableMessage('literal', 'Benchmark data point event for ' + point.getName()),
                          context);

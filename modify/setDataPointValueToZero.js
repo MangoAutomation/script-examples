@@ -27,7 +27,9 @@ const RuntimeManager = Java.type('com.serotonin.m2m2.rt.RuntimeManager');
 const PointValueTime = Java.type('com.serotonin.m2m2.rt.dataImage.PointValueTime');
 const MultistateValue = Java.type('com.serotonin.m2m2.rt.dataImage.types.MultistateValue');
 const multistateZero = new MultistateValue(0);
+const AbstractTimer = Java.type('com.serotonin.timer.AbstractTimer');
 const runtimeManager = runtimeContext.getBean(RuntimeManager.class);
+const timer = runtimeContext.getBean(AbstractTimer.class);
 
 const pointsArray = readCsv('default', 'data-points-to-setToZero.csv');
 
@@ -37,7 +39,7 @@ let failed = 0;
 for(const point of pointsArray) {
     try {
         const rt = runtimeManager.getDataPoint(parseInt(point.id));
-        rt.setPointValue(new PointValueTime(multistateZero, java.lang.System.currentTimeMillis()), null);
+        rt.setPointValue(new PointValueTime(multistateZero, timer.getTimeSource().millis()), null);
         count++;
     }catch(error) {
         console.log('Failed setting value of data point with xid {} and id {}', point.xid, point.id, error);

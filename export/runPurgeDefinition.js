@@ -6,7 +6,7 @@
  *
  * Fixed for Mango 5.7+:
  *  - ModuleRegistry blocked by Graal.js sandbox → runtimeContext.getBean()
- *  - Common.timer removed → java.lang.System.currentTimeMillis()
+ *  - Common.timer removed → ZonedDateTime.now() or runtimeContext.getBean(AbstractTimer.class).getTimeSource().millis()
  */
 const PurgeDefinitionClass = Java.type('com.infiniteautomation.access.MotionFilePurgeDefinition');
 
