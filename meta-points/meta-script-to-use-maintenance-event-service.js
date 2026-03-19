@@ -1,3 +1,6 @@
+/**
+ * Checks for active maintenance events at data source, data point, and watchlist levels.
+ */
 
 var dataSourceService = Java.type('com.infiniteautomation.mango.spring.service.DataSourceService');
 var dataSourceServiceClass = Common.getBean(dataSourceService.class);

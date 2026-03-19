@@ -1,6 +1,9 @@
 /*
  * Copyright (C) 2026 Radix IoT LLC. All rights reserved.
  */
+/**
+ * Reads a Mango configuration export and converts non-virtual data sources to virtual for simulation.
+ */
 downloadJson({
     fileStore: 'default',
     filePath: 'export.json',

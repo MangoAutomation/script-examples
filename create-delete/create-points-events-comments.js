@@ -1,3 +1,7 @@
+/**
+ * Creates virtual data sources with points, sample events, and user comments for testing.
+ */
+
 // import classes
 const DataPointVO = Java.type('com.serotonin.m2m2.vo.DataPointVO');
 const VirtualDataSourceDefinition = Java.type('com.serotonin.m2m2.virtual.VirtualDataSourceDefinition');

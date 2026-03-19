@@ -1,3 +1,6 @@
+/**
+ * Exports users matching an organization query to a downloadable CSV file.
+ */
 const users = services.usersService.buildQuery()
     .equal('organization', 'My org')
     .query();

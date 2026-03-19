@@ -1,3 +1,6 @@
+/**
+ * Copies a data source and all its data points, creating a disabled duplicate with new XIDs.
+ */
 const UUID = Java.type('java.util.UUID');
 const dataSourceService = services.dataSourceService;
 const dataPointService = services.dataPointService;

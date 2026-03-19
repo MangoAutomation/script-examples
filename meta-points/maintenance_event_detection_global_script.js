@@ -1,3 +1,7 @@
+/**
+ * Retrieves active maintenance events and checks at the watchlist level.
+ */
+
 //Spring application context
 var Common = Java.type('com.serotonin.m2m2.Common');
 

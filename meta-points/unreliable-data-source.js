@@ -1,3 +1,6 @@
+/**
+ * Counts unreliable data points per data source and sets meta-point values accordingly.
+ */
 var Common = Java.type('com.serotonin.m2m2.Common');
 var DataSourceRT = Java.type("com.serotonin.m2m2.rt.dataSource.DataSourceRT");
 var ILifecycleState = Java.type("com.serotonin.util.ILifecycleState");

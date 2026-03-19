@@ -2,6 +2,9 @@
  * Copyright (C) 2022 Radix IoT LLC. All rights reserved.
  */
 
+/**
+ * Uses reflection to access and print the lock owner from the IAS TSDB implementation.
+ */
 const Common = Java.type('com.serotonin.m2m2.Common');
 const PointValueDao = Java.type('com.serotonin.m2m2.db.dao.PointValueDao');
 const IasTsdbImpl = Java.type('com.infiniteautomation.tsdb.impl.IasTsdbImpl');

@@ -1,3 +1,7 @@
+/**
+ * Checks all XIDs across data points, data sources, roles, publishers,
+ * event handlers, and users for spaces.
+ */
 // import services
 const dataPointService = services.dataPointService;
 const dataSourceService = services.dataSourceService;

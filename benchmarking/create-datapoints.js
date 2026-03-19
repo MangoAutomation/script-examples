@@ -1,3 +1,7 @@
+/**
+ * Creates virtual data sources with points, tags, event detectors, and optional publishers for benchmarking.
+ */
+
 // import classes
 const DataPointVO = Java.type('com.serotonin.m2m2.vo.DataPointVO');
 const VirtualDataSourceDefinition = Java.type('com.serotonin.m2m2.virtual.VirtualDataSourceDefinition');

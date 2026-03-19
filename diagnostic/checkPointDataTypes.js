@@ -1,3 +1,6 @@
+/**
+ * Validates that running data points' current values match their configured data types.
+ */
 //Confirm that the current value of all points matches the data type
 
 const RuntimeManager = Java.type('com.serotonin.m2m2.rt.RuntimeManager');

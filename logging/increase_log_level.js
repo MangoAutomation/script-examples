@@ -2,6 +2,9 @@
  * Copyright (C) 2021 Radix IoT LLC. All rights reserved.
  */
 
+/**
+ * Changes the log level for a specific logger to DEBUG.
+ */
 var Common = Java.type('com.serotonin.m2m2.Common');
 var LogLevel = Java.type('org.apache.logging.log4j.Level');
 

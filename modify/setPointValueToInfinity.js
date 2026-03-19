@@ -1,3 +1,6 @@
+/**
+ * Sets a data point's value to positive infinity (update pointId before running).
+ */
 const RuntimeManager = Java.type('com.serotonin.m2m2.rt.RuntimeManager');
 const AbstractTimer = Java.type('com.serotonin.timer.AbstractTimer');
 const PointValueTime = Java.type('com.serotonin.m2m2.rt.dataImage.PointValueTime');

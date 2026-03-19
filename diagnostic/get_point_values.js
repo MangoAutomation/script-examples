@@ -1,3 +1,6 @@
+/**
+ * Retrieves and prints point values for all data points from the last month.
+ */
 const Common = Java.type('com.serotonin.m2m2.Common');
 const dataPoints = services.dataPointService.buildQuery().query();
 const PointValueDao = Java.type('com.serotonin.m2m2.db.dao.PointValueDao');

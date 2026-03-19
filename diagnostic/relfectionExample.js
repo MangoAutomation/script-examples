@@ -1,3 +1,6 @@
+/**
+ * Demonstrates reflection access to the EventManager's private fields.
+ */
 //Example access to EventManagerImpl.universalHandlers field (java.util.List)
 
 const EventManager = Java.type('com.serotonin.m2m2.rt.EventManager');

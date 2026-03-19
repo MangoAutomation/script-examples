@@ -1,3 +1,6 @@
+/**
+ * Queries and exports data points from the 'Mango Internal' device as JSON.
+ */
 const dataPoints = services.dataPointService.buildQuery()
     .equal('deviceName', 'Mango Internal')
     .isNull('tags.site')

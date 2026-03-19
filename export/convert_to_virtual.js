@@ -1,3 +1,6 @@
+/**
+ * Converts data sources and their data points to virtual data sources with simulated change types.
+ */
 downloadJson({
     dataSourceXids: ['internal_mango_monitoring_ds'],
     changeXids: true

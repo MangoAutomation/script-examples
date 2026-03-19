@@ -1,3 +1,7 @@
+/**
+ * Creates Persistent TCP data sources configured for performance testing.
+ */
+
 // import classes
 const PersistentDataSourceDefinition = Java.type('com.serotonin.m2m2.persistent.PersistentDataSourceDefinition');
 
