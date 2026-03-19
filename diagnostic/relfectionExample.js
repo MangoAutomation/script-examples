@@ -1,7 +1,7 @@
-//Example Mango 5.0 access to EventManagerImpl.universalHandlers field (java.util.List)
+//Example access to EventManagerImpl.universalHandlers field (java.util.List)
 
-const Common = Java.type('com.serotonin.m2m2.Common');
-const eventManager = Common.eventManager;
+const EventManager = Java.type('com.serotonin.m2m2.rt.EventManager');
+const eventManager = runtimeContext.getBean(EventManager.class);
 console.log(eventManager.getClass());
 const universalHandlersField = eventManager.getClass().getDeclaredField('universalHandlers'); //Must use getDeclaredField for private fields
 console.log(universalHandlersField)

@@ -1,6 +1,7 @@
 const Common = Java.type('com.serotonin.m2m2.Common');
 const dataPoints = services.dataPointService.buildQuery().query();
-const pointValueDao = Common.getBean(Java.type('com.serotonin.m2m2.db.dao.PointValueDao'));
+const PointValueDao = Java.type('com.serotonin.m2m2.db.dao.PointValueDao');
+const pointValueDao = runtimeContext.getBean(PointValueDao.class);
 
 const startTimePeriodType = 'MONTHS';
 const startTimePeriods = 1;

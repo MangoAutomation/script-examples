@@ -13,22 +13,19 @@ Scripts that only read and report on Mango state. Safe to run at any time with n
 
 | Script | Status | Notes |
 |---|---|---|
-| `checkPointDataTypes.js` | ⚠️ | |
-| `detectPointValueCacheProxy.js` | ⚠️ | |
-| `event-count-monitoring.js` | ⚠️ | |
-| `findDuplicateLineProtocolPoints.js` | ⚠️ | |
-| `get_point_values.js` | ⚠️ | |
-| `getLogConfigFile.js` | ⚠️ | |
-| `getPointAttributes.js` | ⚠️ | |
-| `hasSpaceXidCheck.js` | ⚠️ | |
-| `ias_tsdb_lock_owner.js` | ⚠️ | |
-| `list-http-sessions.js` | ⚠️ | |
-| `ping-data-source.js` | ⚠️ | |
-| `printStackTraceWorkerThread.js` | ⚠️ | |
-| `query_points.js` | ⚠️ | |
-| `relfectionExample.js` | ⚠️ | |
-| `running-publisher-points.js` | ⚠️ | |
-| `track-mango-details.js` | ⚠️ | |
+| `checkPointDataTypes.js` | ✅ | Fixed: `Common.runtimeManager` → `runtimeContext.getBean(RuntimeManager.class)`; added null guard for points with no current value |
+| `detectPointValueCacheProxy.js` | ❌ | `getPointValueCacheDao()` removed from `DatabaseProxy` API with no replacement |
+| `event-count-monitoring.js` | ✅ | Runs cleanly; prints warnings if configured data points don't exist (expected on fresh instances) |
+| `findDuplicateLineProtocolPoints.js` | ❌ | Requires Line Protocol module; `getMeasurement()` does not exist on other locator types |
+| `get_point_values.js` | ✅ | Fixed: `Common.getBean()` → `runtimeContext.getBean(PointValueDao.class)` |
+| `getLogConfigFile.js` | ✅ | |
+| `hasSpaceXidCheck.js` | ✅ | |
+| `ias_tsdb_lock_owner.js` | ✅ | Fixed: `Common.getBean()` → `runtimeContext.getBean(PointValueDao.class)`; requires TSDB module |
+| `list-http-sessions.js` | ✅ | |
+| `printStackTraceWorkerThread.js` | ❌ | `ThreadPoolExecutor$Worker` access blocked by Graal.js security sandbox; cannot be fixed |
+| `query_points.js` | ✅ | |
+| `relfectionExample.js` | ✅ | Fixed: `Common.eventManager` → `runtimeContext.getBean(EventManager.class)` |
+| `running-publisher-points.js` | ⚠️ | Script is compatible; update hardcoded `publisherXid` to a real value before running |
 
 ---
 
@@ -146,8 +143,11 @@ These are **not standalone scripts**. Use them as the script body in a Meta data
 
 | Script | Status | Notes |
 |---|---|---|
+| `getPointAttributes.js` | 🚫 | Meta point script — uses `test` binding; moved from `diagnostic/` |
 | `maintenance_event_detection_global_script.js` | 🚫 | Meta point script |
 | `meta-script-to-use-maintenance-event-service.js` | 🚫 | Meta point script |
+| `ping-data-source.js` | 🚫 | Meta point script — uses `EXTERNAL_POINTS` binding; moved from `diagnostic/` |
+| `track-mango-details.js` | 🚫 | Meta point script — uses `EXTERNAL_POINTS` binding; moved from `diagnostic/` |
 
 ---
 

@@ -7,7 +7,7 @@ const PointValueDao = Java.type('com.serotonin.m2m2.db.dao.PointValueDao');
 const IasTsdbImpl = Java.type('com.infiniteautomation.tsdb.impl.IasTsdbImpl');
 
 
-const pointValueDao = Common.getBean(PointValueDao);
+const pointValueDao = runtimeContext.getBean(PointValueDao.class);
 const db = pointValueDao.getDb();
 
 const lockField = IasTsdbImpl.class.getDeclaredField('lock');
