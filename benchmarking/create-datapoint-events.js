@@ -5,15 +5,17 @@
  */
  
 // import classes
-const Common = Java.type('com.serotonin.m2m2.Common');
 const HashMap = Java.type('java.util.HashMap');
 const AlarmLevels = Java.type('com.serotonin.m2m2.rt.event.AlarmLevels');
 const TranslatableMessage = Java.type('com.serotonin.m2m2.i18n.TranslatableMessage');
 const EventDetectorDao = Java.type('com.serotonin.m2m2.db.dao.EventDetectorDao');
 const DataPointEventType = Java.type('com.serotonin.m2m2.rt.event.type.DataPointEventType');
+const EventManager = Java.type('com.serotonin.m2m2.rt.EventManager');
 
 // import services
 const dataPointService = services.dataPointService;
+const eventDetectorDao = runtimeContext.getBean(EventDetectorDao.class);
+const eventManager = runtimeContext.getBean(EventManager.class);
 
 const eventsPerDataPoint = 10; // number of events per data point
 const limit = 10; //Count of data points to add events to, orderd by id
@@ -23,7 +25,7 @@ let eventCount = 0;
 dataPointService.buildQuery()
             .sort('id', true)
             .query(point => {
-                const detectors = EventDetectorDao.getInstance().getWithSource(point.getId(), point);
+                const detectors = eventDetectorDao.getWithSource(point.getId(), point);
                 if(detectors.size() > 0) {
                     const type = new DataPointEventType(point, detectors.get(0));
                     const context = new HashMap();
@@ -31,8 +33,8 @@ dataPointService.buildQuery()
                     context.put('dataPoint', point);
 
                     for(var i=0; i<eventsPerDataPoint; i++) {
-                        Common.eventManager.raiseEvent(type,
-                        Common.timer.currentTimeMillis(),
+                        eventManager.raiseEvent(type,
+                        java.lang.System.currentTimeMillis(),
                          false, AlarmLevels.INFORMATION,
                          new TranslatableMessage('literal', 'Benchmark data point event for ' + point.getName()),
                          context);

@@ -1,12 +1,14 @@
 /**
  * Example to submit work to the medium priority thread pool
  */
-const Common = Java.type('com.serotonin.m2m2.Common');
+const BackgroundProcessing = Java.type('com.serotonin.m2m2.rt.maint.BackgroundProcessing');
 const WorkItem = Java.extend(Java.type('com.serotonin.m2m2.rt.maint.work.WorkItem'));
+const WorkItemPriority = Java.type('com.serotonin.m2m2.rt.maint.work.WorkItemPriority');
+const backgroundProcessing = runtimeContext.getBean(BackgroundProcessing.class);
 
-const HIGH_PRIORITY = 1;
-const MEDIUM_PRIORITY = 2;
-const LOW_PRIORITY = 3;
+const HIGH_PRIORITY = WorkItemPriority.HIGH;
+const MEDIUM_PRIORITY = WorkItemPriority.MEDIUM;
+const LOW_PRIORITY = WorkItemPriority.LOW;
 
 console.log('Submitting work items');
 
@@ -28,5 +30,5 @@ for(var i=0; i<10; i++) {
             log.error('rejected ');    
         }
     });
-    Common.backgroundProcessing.addWorkItem(work);
+    backgroundProcessing.addWorkItem(work);
 }

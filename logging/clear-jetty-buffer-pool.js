@@ -13,7 +13,7 @@ const Lifecycle = Java.type('com.serotonin.m2m2.Lifecycle');
 const MangoWebSocketHandshakeHandler = Java.type('com.infiniteautomation.mango.rest.latest.websocket.MangoWebSocketHandshakeHandler');
 const BooleanClass = Java.type('java.lang.Boolean');
 
-const lifecycle = Common.getBean(Lifecycle);
+const lifecycle = runtimeContext.getBean(Lifecycle.class);
 const serverField = lifecycle.getClass().getDeclaredField('server');
 serverField.setAccessible(true);
 const server = serverField.get(lifecycle);

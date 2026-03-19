@@ -69,8 +69,14 @@ const fileStorePath = 'default';
 const RESERVED_EMPTY = "EMPTY";
 const Files = Java.type('java.nio.file.Files');
 const Common = Java.type('com.serotonin.m2m2.Common');
-const ModuleRegistry = Java.type('com.serotonin.m2m2.module.ModuleRegistry');
+const EventDetectorDefinition = Java.type('com.serotonin.m2m2.module.EventDetectorDefinition');
 const AlarmLevels = Java.type('com.serotonin.m2m2.rt.event.AlarmLevels');
+
+// Build a map of event detector definitions by type name (replaces ModuleRegistry.getEventDetectorDefinition())
+const eventDetectorDefinitions = {};
+runtimeContext.getBeansOfType(EventDetectorDefinition.class).values().forEach(def => {
+    eventDetectorDefinitions[def.getEventDetectorTypeName()] = def;
+});
 const dataPointService = services.dataPointService;
 const eventHandlerService = services.eventHandlerService;
 const EventHandlerDao = Java.type('com.serotonin.m2m2.db.dao.EventHandlerDao');
@@ -513,7 +519,8 @@ for (const eventDetectorCsv of eventDetectorsArray) {
             verbose(`Getting point...`);
             point = dataPointService.get(eventDetectorCsv.dataPointXid);
             verbose(`Point found...`);
-            const definition = ModuleRegistry.getEventDetectorDefinition(eventDetectorCsv.detectorType);
+            const definition = eventDetectorDefinitions[eventDetectorCsv.detectorType];
+            if(!definition) throw new Error('Unknown event detector type: ' + eventDetectorCsv.detectorType);
             verbose(`Defining detector...`);
             detector = definition.baseCreateEventDetectorVO(point);
             

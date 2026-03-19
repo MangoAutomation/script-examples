@@ -1,6 +1,5 @@
 // import classes
 const DataPointVO = Java.type('com.serotonin.m2m2.vo.DataPointVO');
-const ModuleRegistry = Java.type('com.serotonin.m2m2.module.ModuleRegistry');
 const VirtualDataSourceDefinition = Java.type('com.serotonin.m2m2.virtual.VirtualDataSourceDefinition');
 const PersistentPointVO = Java.type('com.serotonin.m2m2.persistent.pub.PersistentPointVO');
 const PersistentPublisherDefinition = Java.type('com.serotonin.m2m2.persistent.PersistentPublisherDefinition');
@@ -24,7 +23,8 @@ const possibleTagKeys = 2; // number of tag keys that are possible
 const possibleTagValues = 2; // number of values per tag that are possible
 const detectorsPerPoint = 1; // number of event detectors per data point
 
-const updateEventDetectorDefinition = ModuleRegistry.getEventDetectorDefinition('UPDATE');
+const UpdateEventDetectorDefinition = Java.type('com.serotonin.m2m2.module.definitions.event.detectors.UpdateEventDetectorDefinition');
+const updateEventDetectorDefinition = runtimeContext.getBean(UpdateEventDetectorDefinition.class);
 
     const pointReadRoles = [];
     const pointEditRoles = [];
@@ -52,7 +52,7 @@ for (let i = 0; i < possibleTagKeys; i++) {
 const tagKeys = Object.keys(tags);
 
 for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
-    const dataSourceDef = ModuleRegistry.getDefinition(VirtualDataSourceDefinition.class);
+    const dataSourceDef = runtimeContext.getBean(VirtualDataSourceDefinition.class);
     const dataSource = dataSourceDef.baseCreateDataSourceVO();
     dataSource.setName(`Performance test ${dsCount}`);
     dataSource.setUpdatePeriodType(1); // SECONDS
@@ -60,7 +60,8 @@ for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
     dataSourceService.insert(dataSource);
 
     const locator = dataSource.createPointLocator();
-    locator.setDataTypeId(3); // NUMERIC
+    const DataType = Java.type('com.serotonin.m2m2.DataType');
+    locator.setDataType(DataType.NUMERIC);
     locator.setChangeTypeId(3); // INCREMENT_ANALOG
     locator.getIncrementAnalogChange().setStartValue('0');
     locator.getIncrementAnalogChange().setMax(100);
@@ -114,7 +115,7 @@ for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
     // dataSourceService.restart(dataSource.getXid(), true, false);
 
     if (createPublishers) {
-        const publisherDef = ModuleRegistry.getDefinition(PersistentPublisherDefinition.class);
+        const publisherDef = runtimeContext.getBean(PersistentPublisherDefinition.class);
         const publisher = publisherDef.baseCreatePublisherVO();
         publisher.setEnabled(true);
         publisher.setPoints(publishedPoints);

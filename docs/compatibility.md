@@ -34,10 +34,10 @@ Scripts that adjust log levels or trigger JVM-level operations. Reversible and l
 
 | Script | Status | Notes |
 |---|---|---|
-| `clear-jetty-buffer-pool.js` | ⚠️ | |
-| `increase_log_level.js` | ⚠️ | |
-| `submitWorkItem.js` | ⚠️ | |
-| `suggestGarbageCollection.js` | ⚠️ | |
+| `clear-jetty-buffer-pool.js` | ❌ | Fixed `Common.getBean()` → `runtimeContext.getBean(Lifecycle.class)`; blocked by Graal.js sandbox: `MangoWebSocketHandshakeHandler` class access not permitted |
+| `increase_log_level.js` | ✅ | |
+| `submitWorkItem.js` | ✅ | Fixed: `Common.backgroundProcessing` → `runtimeContext.getBean(BackgroundProcessing.class)`; `WorkItemPriority` int constants → enum values |
+| `suggestGarbageCollection.js` | ✅ | |
 
 ---
 
@@ -46,14 +46,14 @@ Scripts that generate output (CSV, JSON, etc.) or serve data via the HTTP respon
 
 | Script | Status | Notes |
 |---|---|---|
-| `convert_server_configuration_to_simulation.js` | ⚠️ | Generates import JSON |
-| `convert_to_virtual.js` | ⚠️ | Generates import JSON |
-| `echo-json.js` | ⚠️ | Requires `Access request/response objects` permission |
-| `export_users_csv.js` | ⚠️ | |
-| `globalContext.js` | ⚠️ | Demonstrates shared script bindings |
-| `httpGetRequest.js` | ⚠️ | Makes outbound HTTP request |
-| `point-value-report-csv.js` | ⚠️ | |
-| `runPurgeDefinition.js` | ⚠️ | |
+| `convert_server_configuration_to_simulation.js` | ⚠️ | Requires `export.json` in default filestore; script itself is compatible |
+| `convert_to_virtual.js` | ✅ | |
+| `echo-json.js` | ✅ | Requires JSON body in POST request; requires `Access request/response objects` permission |
+| `export_users_csv.js` | ✅ | |
+| `globalContext.js` | ❌ | `hasBinding`/`addBinding`/`getBinding`/`removeBinding` do not exist in filestore script context; no replacement available |
+| `httpGetRequest.js` | ✅ | Fixed: `HttpBuilder` not available in filestore scripts → `java.net.http.HttpClient` |
+| `point-value-report-csv.js` | ✅ | Fixed: `Common.getMillis()` removed → JS arithmetic; `HttpBuilder` → `java.net.http.HttpClient` |
+| `runPurgeDefinition.js` | ✅ | Fixed: `ModuleRegistry` sandbox-blocked → `runtimeContext.getBean()`; `Common.timer` → `ZonedDateTime.now()`; requires Access module |
 
 ---
 
@@ -62,23 +62,22 @@ Scripts that update existing entities (permissions, point values, configurations
 
 | Script | Status | Notes |
 |---|---|---|
-| `Remove_Duplicated_SeriesId.js` | ⚠️ | |
-| `add_role_to_read_permission.js` | ⚠️ | |
-| `change_event_detectors.js` | ⚠️ | |
-| `check-and-set-unreliable.js` | ⚠️ | Requires `virtual-container.json` in same dir |
-| `delete-point-values.js` | ⚠️ | Has `dryRun = true` by default |
-| `deserialize-data-column.js` | ⚠️ | |
-| `eventHandlersPermissionRolesChange.js` | ⚠️ | |
-| `modifyEventHandler.js` | ⚠️ | |
-| `modifyModbusDataSources.js` | ⚠️ | Requires Modbus module |
-| `modifyVoJsonDataField.js` | ⚠️ | |
-| `restart-points.js` | ⚠️ | |
-| `set-unreliable-data-point-to-default-value.js` | ⚠️ | |
-| `setDataPointValueToZero.js` | ⚠️ | Requires CSV input file |
-| `setPointValueToInfinity.js` | ⚠️ | Hardcoded point ID — update before running |
-| `unreliable-data-source.js` | ⚠️ | |
-| `updateSqlTable.js` | ⚠️ | Direct SQL write — use with caution |
-| `upgradeDataPoints.js` | ⚠️ | |
+| `Remove_Duplicated_SeriesId.js` | ✅ | Fixed: `Common.getBean()` → `runtimeContext.getBean()`; requires `9999.csv` in default filestore |
+| `add_role_to_read_permission.js` | ✅ | |
+| `change_event_detectors.js` | ✅ | Fixed: `ModuleRegistry` sandbox-blocked → `runtimeContext.getBean()`; `Common.TimePeriods` still works |
+| `check-and-set-unreliable.js` | ✅ | Fixed: `Common.runtimeManager` → `runtimeContext.getBean(RuntimeManager.class)`; `Common.timer` → `System.currentTimeMillis()`; requires hardcoded XIDs and `virtual-container.json` |
+| `delete-point-values.js` | ✅ | Fixed: `Common.getBean()` → `runtimeContext.getBean()`; `Common.runtimeManager` → `runtimeContext.getBean(RuntimeManager.class)`; has `dryRun = true` by default |
+| `deserialize-data-column.js` | ✅ | Fixed: `Common.getBean(DatabaseProxy)` → `runtimeContext.getBean(DatabaseProxy.class)` |
+| `eventHandlersPermissionRolesChange.js` | ✅ | |
+| `modifyEventHandler.js` | ✅ | Update hardcoded event handler XID before running |
+| `modifyModbusDataSources.js` | ✅ | Requires Modbus module |
+| `modifyVoJsonDataField.js` | ✅ | Fixed: `Common.getBean(ObjectMapper, name)` → `runtimeContext.getBean(name, ObjectMapper.class)` |
+| `restart-points.js` | ✅ | Requires `data-points-to-restart.csv` in default filestore |
+| `set-unreliable-data-point-to-default-value.js` | ✅ | |
+| `setDataPointValueToZero.js` | ✅ | Fixed: `Common.runtimeManager` → `runtimeContext.getBean(RuntimeManager.class)`; `Common.timer` → `System.currentTimeMillis()`; requires CSV |
+| `setPointValueToInfinity.js` | ✅ | Fixed: `Common.runtimeManager` → `runtimeContext.getBean(RuntimeManager.class)`; `Common.timer` → `System.currentTimeMillis()`; hardcoded point ID |
+| `updateSqlTable.js` | ✅ | Fixed: `Common.databaseProxy` → `runtimeContext.getBean(DatabaseProxy.class)`; direct SQL — use with caution |
+| `upgradeDataPoints.js` | ✅ | Fixed: `DataTypes` sandbox-blocked → `DataType` enum |
 
 ---
 
@@ -87,14 +86,14 @@ Scripts that insert or remove data sources, data points, or publishers. Run on a
 
 | Script | Status | Notes |
 |---|---|---|
-| `copy-mango-data-point-REST.js` | ⚠️ | Uses REST API internally |
-| `copy_data_source.js` | ⚠️ | Requires template DS XID — update `DS_XYZ` before running |
-| `create-data-points.js` | ⚠️ | Requires template point XID — update before running; scaled to 5 points |
-| `create-points-async.js` | ⚠️ | Scaled to 1 DS × 3 points |
-| `create-points-events-comments.js` | ⚠️ | Scaled to 3 points × 3 events |
-| `create-tag-config.js` | ⚠️ | Requires template point XID — update before running; scaled to 5 points |
-| `delete-data-points.js` | ⚠️ | Requires `data-points-to-delete.csv` in default filestore |
-| `delete-data-source.js` | ⚠️ | Requires `data-source-to-delete.csv` in default filestore |
+| `copy-mango-data-point-REST.js` | ✅ | Fixed: `HttpBuilder` → `java.net.http.HttpClient`; requires valid token and point XID |
+| `copy_data_source.js` | ✅ | Update `DS_XYZ` to a real XID before running |
+| `create-data-points.js` | ✅ | Requires template point XID — update before running; scaled to 5 points |
+| `create-points-async.js` | ✅ | Fixed: `ModuleRegistry` → `runtimeContext.getBean()`; `Common.getBean()` → `runtimeContext.getBean()`; scaled to 1 DS × 3 points |
+| `create-points-events-comments.js` | ✅ | Fixed: `ModuleRegistry` → `runtimeContext.getBean()`; `Common.getBean()` → `runtimeContext.getBean()`; `DataPointEventType` constructor now requires `EventTypeDependencies`; scaled to 3 pts × 3 events |
+| `create-tag-config.js` | ✅ | Requires template point XID — update before running; scaled to 5 points |
+| `delete-data-points.js` | ✅ | Requires `data-points-to-delete.csv` in default filestore |
+| `delete-data-source.js` | ✅ | Requires `data-source-to-delete.csv` in default filestore |
 
 ---
 
@@ -103,16 +102,16 @@ Scripts that create large volumes of data or simulate high-throughput scenarios.
 
 | Script | Status | Notes |
 |---|---|---|
-| `create-datapoint-events.js` | ⚠️ | |
-| `create-datapoints.js` | ⚠️ | Scaled to 3 points/DS; requires `BENCHMARK_READ`/`BENCHMARK_EDIT` roles (run `create-users.js` first) |
-| `create-users.js` | ⚠️ | Creates 2 roles + 1 benchmark user; idempotent |
-| `generatePointValues.js` | ⚠️ | Requires specific point XIDs — update before running |
-| `generatePointValues_rad-3843.js` | ⚠️ | Scaled to 30 minutes history; requires specific point XIDs |
-| `query-benchmarks.js` | ⚠️ | |
-| `setup-performance-test-datasources.js` | ⚠️ | Requires Persistent TCP module |
-| `setup-performance-test-publishers.js` | ⚠️ | Requires Persistent TCP module |
-| `setup-performance-test-publishers-v5.js` | ⚠️ | Mango 5.x version; requires Persistent TCP module |
-| `v4_generatePublisherJsonFromUnpublishedPoints.js` | ⚠️ | |
+| `create-datapoint-events.js` | ✅ | Fixed: `EventDetectorDao.getInstance()` → `runtimeContext.getBean()`; `Common.eventManager` → `runtimeContext.getBean(EventManager.class)`; `Common.timer` → `System.currentTimeMillis()` |
+| `create-datapoints.js` | ✅ | Fixed: `ModuleRegistry` → `runtimeContext.getBean()`; `setDataTypeId()` → `setDataType(DataType.NUMERIC)`; requires `BENCHMARK_READ`/`BENCHMARK_EDIT` roles (run `create-users.js` first); scaled to 3 pts/DS |
+| `create-users.js` | ✅ | Fixed: `new User()` → `new User(permissionService, passwordService)`; creates 2 roles + 1 user; idempotent |
+| `generatePointValues.js` | ✅ | Requires specific point XIDs — update before running |
+| `generatePointValues_rad-3843.js` | ✅ | Scaled to 30 minutes history; requires specific point XIDs |
+| `query-benchmarks.js` | ✅ | Fixed: `DataPointTagsDao.getInstance()` → `runtimeContext.getBean()`; requires benchmark user (run `create-users.js` first) |
+| `setup-performance-test-datasources.js` | ⚠️ | Fixed: `ModuleRegistry` → `runtimeContext.getBean()`; requires Persistent TCP module (validation fails without it) |
+| `setup-performance-test-publishers.js` | ✅ | Fixed: `ModuleRegistry` → `runtimeContext.getBean()`; `setDataTypeId()` → `setDataType()`; requires Persistent TCP module for publisher |
+| `setup-performance-test-publishers-v5.js` | ⚠️ | Fixed: `ModuleRegistry` → `runtimeContext.getBean()`; requires Persistent TCP module (validation fails without it) |
+| `v4_generatePublisherJsonFromUnpublishedPoints.js` | ✅ | Requires `your-query-output.csv` in default filestore |
 
 ---
 
@@ -121,9 +120,9 @@ Scripts that create, edit, or delete event detectors on data points.
 
 | Script | Status | Notes |
 |---|---|---|
-| `create-event-detectors.js` | ⚠️ | |
-| `delete-event-detectors.js` | ⚠️ | |
-| `edit-event-detectors.js` | ⚠️ | |
+| `create-event-detectors.js` | ✅ | Fixed: `ModuleRegistry.getEventDetectorDefinition()` → `runtimeContext.getBeansOfType(EventDetectorDefinition.class)` lookup; requires `event-detectors-to-create.csv` in default filestore |
+| `delete-event-detectors.js` | ✅ | Requires `event-detectors-to-delete.csv` in default filestore |
+| `edit-event-detectors.js` | ✅ | Requires `event-detectors-to-edit.csv` in default filestore |
 
 ---
 
@@ -148,6 +147,7 @@ These are **not standalone scripts**. Use them as the script body in a Meta data
 | `meta-script-to-use-maintenance-event-service.js` | 🚫 | Meta point script |
 | `ping-data-source.js` | 🚫 | Meta point script — uses `EXTERNAL_POINTS` binding; moved from `diagnostic/` |
 | `track-mango-details.js` | 🚫 | Meta point script — uses `EXTERNAL_POINTS` binding; moved from `diagnostic/` |
+| `unreliable-data-source.js` | 🚫 | Meta point script — uses `EXTERNAL_POINTS` binding; moved from `modify/` |
 
 ---
 

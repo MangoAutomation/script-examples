@@ -1,7 +1,6 @@
 //Compatible with mango 5.x
 // import classes
 const DataPointVO = Java.type('com.serotonin.m2m2.vo.DataPointVO');
-const ModuleRegistry = Java.type('com.serotonin.m2m2.module.ModuleRegistry');
 const VirtualDataSourceDefinition = Java.type('com.serotonin.m2m2.virtual.VirtualDataSourceDefinition');
 const PersistentPointVO = Java.type('com.serotonin.m2m2.persistent.pub.PersistentPointVO');
 const PersistentPublisherDefinition = Java.type('com.serotonin.m2m2.persistent.PersistentPublisherDefinition');
@@ -51,7 +50,7 @@ for(let i=0; i<readRoleXids.length; i++) {
 const readPermission = new MangoPermission(readRoles);
 
 for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
-    const dataSourceDef = ModuleRegistry.getDefinition(VirtualDataSourceDefinition.class);
+    const dataSourceDef = runtimeContext.getBean(VirtualDataSourceDefinition.class);
     const dataSource = dataSourceDef.baseCreateDataSourceVO();
     dataSource.setName(`Performance test ${dsCount}`);
     dataSource.setUpdatePeriodType(1); // SECONDS
@@ -74,7 +73,7 @@ for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
     dataPoint.setPointLocator(locator);
     dataPoint.setReadPermission(readPermission);
 
-    const publisherDef = ModuleRegistry.getDefinition(PersistentPublisherDefinition.class);
+    const publisherDef = runtimeContext.getBean(PersistentPublisherDefinition.class);
     var publisher = publisherDef.baseCreatePublisherVO();
     if (createPublishers) {
         publisher.setEnabled(true);

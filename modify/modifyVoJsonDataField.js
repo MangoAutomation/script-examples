@@ -1,15 +1,14 @@
 /**
 * This script will access the data field of a user to modify it
 */
-const Common = Java.type('com.serotonin.m2m2.Common');
+const ObjectMapper = Java.type('com.fasterxml.jackson.databind.ObjectMapper');
 const usersService = services.usersService;
-
-
 
 try {
     const admin = usersService.get('admin');
     if(admin.getData() == null) {
-        admin.setData(Common.getBean(Java.type('com.fasterxml.jackson.databind.ObjectMapper'), Java.type('com.infiniteautomation.mango.spring.MangoRuntimeContextConfiguration').COMMON_OBJECT_MAPPER_NAME).createObjectNode())
+        const MangoRuntimeContextConfiguration = Java.type('com.infiniteautomation.mango.spring.MangoRuntimeContextConfiguration');
+        admin.setData(runtimeContext.getBean(MangoRuntimeContextConfiguration.COMMON_OBJECT_MAPPER_NAME, ObjectMapper.class).createObjectNode())
     }
     admin.getData().put('/number', 1);
     admin.getData().put('/string', 'One');

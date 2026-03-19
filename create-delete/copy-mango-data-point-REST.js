@@ -1,58 +1,51 @@
 /*
-* Get a data point from Mango, modify it and create a new point on the same data source
+* Get a data point from Mango, modify it and create a new point on the same data source.
+*
+* NOTE: HttpBuilder is NOT available in filestore scripts (only in Meta/EventHandler scripts).
+* Uses java.net.http.HttpClient instead.
 */
 var sourcePointXid = 'voltage';
 
 //Token for user with permission to get and create the point
-var userToken = 'eyJhbGciOiJFUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTc2ODkzOTAxMywiaWQiOjEsInYiOjEsInR5cCI6ImF1dGgifQ.AU-YbdpreFzxnVlu1pbDL32BPZCOSnlPoMY15Ut-TZZPF46ID4Awzg4-XLgSjcn5lFj3NtoiIyz2-FtVw3uZz_QrAH_K8vrQ2sP17wULrhg87FvdFw7iaJTXqlliwK4MCTUShRQvUqETjV1hGHIvSrlPtc94Ro4FRA4vzY7zfBkIhCIM';
+var userToken = 'put-your-token-here';
 
-var sourcePoint = HttpBuilder.request({
-    path: 'http://localhost:8080/rest/latest/data-points/' + sourcePointXid,
-    method: 'GET',
-    headers: {
-        authorization: 'Bearer ' + userToken
-    },
-    parameters: {},
-    err: function(status, headers, content) { //errorCallback for linguistic completion
-        throw 'Request got bad response: ' + status;
-    },
-    resp: function(status, headers, content) { //responseCallback
-        //print(content); //To see what you are modifing
-        return JSON.parse(content);
-    },
-    excp: function(exception) { //exceptionCallback
-        throw exception.getMessage();
-    }
-});
+const HttpClient = Java.type('java.net.http.HttpClient');
+const HttpRequest = Java.type('java.net.http.HttpRequest');
+const HttpResponse = Java.type('java.net.http.HttpResponse');
+const URI = Java.type('java.net.URI');
+
+const client = HttpClient.newHttpClient();
+
+// GET the source point
+const getRequest = HttpRequest.newBuilder()
+    .uri(URI.create('http://localhost:8080/rest/latest/data-points/' + sourcePointXid))
+    .header('Authorization', 'Bearer ' + userToken)
+    .GET()
+    .build();
+
+const getResponse = client.send(getRequest, HttpResponse.BodyHandlers.ofString());
+if(getResponse.statusCode() !== 200) {
+    throw new Error('GET failed: ' + getResponse.statusCode() + ' ' + getResponse.body());
+}
+var sourcePoint = JSON.parse(getResponse.body());
 
 //Modify the point
 sourcePoint.id = null;
 sourcePoint.xid = null;
 sourcePoint.name = 'Test Point Created by script';
 
-//Create new point
-var url = 'http://localhost:8080/rest/latest/data-points';
-var headers = {
-        authorization: 'Bearer ' + userToken
-    };
-var content = JSON.stringify(sourcePoint);
-var postPointBuilder = HttpBuilder.post(url, headers, content);
+//Create new point via POST
+const postRequest = HttpRequest.newBuilder()
+    .uri(URI.create('http://localhost:8080/rest/latest/data-points'))
+    .header('Authorization', 'Bearer ' + userToken)
+    .header('Content-Type', 'application/json')
+    .POST(HttpRequest.BodyPublishers.ofString(JSON.stringify(sourcePoint)))
+    .build();
 
-//set acceptable status to 201 Created
-postPointBuilder.setOkayStatusArray([201]);
-
-//Set callbacks
-postPointBuilder.resp(function(status, headers, content) { //responseCallback
-        print(content); //To see what you are modifin
-        return true;
-    });
-postPointBuilder.err(function(status, headers, content) { //errorCallback for linguistic completion
-        throw 'Request got bad response: ' + status;
-    });
-postPointBuilder.excp(function(exception) { //exceptionCallback
-        throw exception.getMessage();
-    });
-
-if(postPointBuilder.execute()) {
+const postResponse = client.send(postRequest, HttpResponse.BodyHandlers.ofString());
+if(postResponse.statusCode() === 201) {
+    print(postResponse.body());
     print('Created point');
+} else {
+    throw new Error('POST failed: ' + postResponse.statusCode() + ' ' + postResponse.body());
 }

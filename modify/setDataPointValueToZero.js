@@ -23,10 +23,11 @@ function readCsv(fileStore, filePath) {
     return lines;
 }
 
-const Common = Java.type('com.serotonin.m2m2.Common');
+const RuntimeManager = Java.type('com.serotonin.m2m2.rt.RuntimeManager');
 const PointValueTime = Java.type('com.serotonin.m2m2.rt.dataImage.PointValueTime');
 const MultistateValue = Java.type('com.serotonin.m2m2.rt.dataImage.types.MultistateValue');
 const multistateZero = new MultistateValue(0);
+const runtimeManager = runtimeContext.getBean(RuntimeManager.class);
 
 const pointsArray = readCsv('default', 'data-points-to-setToZero.csv');
 
@@ -35,8 +36,8 @@ let count = 0;
 let failed = 0;
 for(const point of pointsArray) {
     try {
-        const rt = Common.runtimeManager.getDataPoint(parseInt(point.id));
-        rt.setPointValue(new PointValueTime(multistateZero, Common.timer.currentTimeMillis()), null);
+        const rt = runtimeManager.getDataPoint(parseInt(point.id));
+        rt.setPointValue(new PointValueTime(multistateZero, java.lang.System.currentTimeMillis()), null);
         count++;
     }catch(error) {
         console.log('Failed setting value of data point with xid {} and id {}', point.xid, point.id, error);

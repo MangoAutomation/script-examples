@@ -1,3 +1,6 @@
+/*
+ * Copyright (C) 2026 Radix IoT LLC. All rights reserved.
+ */
 downloadJson({
     fileStore: 'default',
     filePath: 'export.json',

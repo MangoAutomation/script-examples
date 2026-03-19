@@ -1,18 +1,20 @@
 /**
  * This script finds all data points with names of reboot,resetAlarms,beacon1State and sets the data type to MULTISTATE
+ *
+ * Fixed for Mango 5.7+: DataTypes class sandbox-blocked → DataType enum
  */
 
 const dataPointService = services.dataPointService;
-const DataTypes = Java.type('com.serotonin.m2m2.DataTypes');
+const DataType = Java.type('com.serotonin.m2m2.DataType');
 let count = 0;
 
 const upgradePoint = function(point) {
     try {
-        point.getPointLocator().setDataTypeId(DataTypes.MULTISTATE);
+        point.getPointLocator().setDataType(DataType.MULTISTATE);
         dataPointService.update(point.getXid(), point);
         count++;
     } catch(e) {
-        log.error('Failed to upgrade point {}', point, error);
+        log.error('Failed to upgrade point {}', point, e);
     }
 };
 

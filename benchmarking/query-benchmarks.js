@@ -4,10 +4,10 @@
  *  capture the script log output too.
  */
 // import classes
-const Common = Java.type('com.serotonin.m2m2.Common');
 const LogStopWatch = Java.type('com.serotonin.log.LogStopWatch');
 const DataPointTagsDao = Java.type('com.serotonin.m2m2.db.dao.DataPointTagsDao');
 const MangoPermission = Java.type('com.infiniteautomation.mango.permission.MangoPermission');
+const dataPointTagsDao = runtimeContext.getBean(DataPointTagsDao.class);
 
 // import services
 const dataPointService = services.dataPointService;
@@ -27,7 +27,7 @@ for(let i=0; i<iterations; i++) {
     log.info('Test iteration ' + i + ' with user ' + users[i].getName());
     //Test data point tags
     const stopwatch = new LogStopWatch();
-    const keys = DataPointTagsDao.getInstance().getTagKeys(users[i]);
+    const keys = dataPointTagsDao.getTagKeys(users[i]);
     stopwatch.stop(() => 'Collected ' + keys.size() + ' tag keys');
     
     const tags = {};
@@ -35,7 +35,7 @@ for(let i=0; i<iterations; i++) {
     const keyIt = keys.iterator();
     while(keyIt.hasNext()) {
         let key = keyIt.next();
-        tags[key] = DataPointTagsDao.getInstance().getTagValuesForKey(key, users[i]);
+        tags[key] = dataPointTagsDao.getTagValuesForKey(key, users[i]);
     }
     stopwatch.stop(() => 'Retrieved all tag key values.');
     

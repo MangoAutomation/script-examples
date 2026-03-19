@@ -1,9 +1,7 @@
 // import classes
 const DataPointVO = Java.type('com.serotonin.m2m2.vo.DataPointVO');
-const ModuleRegistry = Java.type('com.serotonin.m2m2.module.ModuleRegistry');
 const VirtualDataSourceDefinition = Java.type('com.serotonin.m2m2.virtual.VirtualDataSourceDefinition');
 const CompletableFuture = Java.type('java.util.concurrent.CompletableFuture');
-const Common = Java.type('com.serotonin.m2m2.Common');
 const PointValueDao = Java.type('com.serotonin.m2m2.db.dao.PointValueDao');
 const BrownianPointValueGenerator = Java.type('com.infiniteautomation.mango.pointvalue.generator.BrownianPointValueGenerator');
 const DataType = Java.type('com.serotonin.m2m2.DataType');
@@ -11,7 +9,7 @@ const DataType = Java.type('com.serotonin.m2m2.DataType');
 // import services
 const dataPointService = services.dataPointService;
 const dataSourceService = services.dataSourceService;
-const pointValueDao = Common.getBean(PointValueDao.class);
+const pointValueDao = runtimeContext.getBean(PointValueDao.class);
 
 // configuration parameters
 const numDataSources = 1; // number of data sources to create
@@ -42,7 +40,7 @@ const generator = new BrownianPointValueGenerator(generateFrom, generateTo, gene
 const inserter = generator.createInserter(pointValueDao, 10000);
 
 for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
-    const dataSourceDef = ModuleRegistry.getDefinition(VirtualDataSourceDefinition.class);
+    const dataSourceDef = runtimeContext.getBean(VirtualDataSourceDefinition.class);
     const dataSource = dataSourceDef.baseCreateDataSourceVO();
     dataSource.setName(`Performance test ${dsCount}`);
     dataSource.setUpdatePeriodType(8); // MILLISECONDS

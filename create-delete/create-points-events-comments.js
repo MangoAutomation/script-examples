@@ -1,11 +1,11 @@
 // import classes
 const DataPointVO = Java.type('com.serotonin.m2m2.vo.DataPointVO');
-const ModuleRegistry = Java.type('com.serotonin.m2m2.module.ModuleRegistry');
 const VirtualDataSourceDefinition = Java.type('com.serotonin.m2m2.virtual.VirtualDataSourceDefinition');
-const Common = Java.type('com.serotonin.m2m2.Common');
 const DataType = Java.type('com.serotonin.m2m2.DataType');
 const EventInstance = Java.type('com.serotonin.m2m2.rt.event.EventInstance');
 const DataPointEventType = Java.type('com.serotonin.m2m2.rt.event.type.DataPointEventType');
+const EventTypeDependencies = Java.type('com.serotonin.m2m2.rt.event.type.definition.EventTypeDependencies');
+const eventTypeDependencies = runtimeContext.getBean(EventTypeDependencies.class);
 const AlarmLevels = Java.type('com.serotonin.m2m2.rt.event.AlarmLevels');
 const TranslatableMessage = Java.type('com.serotonin.m2m2.i18n.TranslatableMessage');
 const EventDao = Java.type('com.serotonin.m2m2.db.dao.EventDao');
@@ -16,8 +16,8 @@ const UserCommentDao = Java.type('com.serotonin.m2m2.db.dao.UserCommentDao');
 // import services
 const dataPointService = services.dataPointService;
 const dataSourceService = services.dataSourceService;
-const eventDao = Common.getBean(EventDao.class);
-const userCommentDao = Common.getBean(UserCommentDao.class);
+const eventDao = runtimeContext.getBean(EventDao.class);
+const userCommentDao = runtimeContext.getBean(UserCommentDao.class);
 
 // configuration parameters
 const numDataSources = 1; // number of data sources to create
@@ -42,7 +42,7 @@ const futures = [];
 const startTime = new Date();
 
 for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
-    const dataSourceDef = ModuleRegistry.getDefinition(VirtualDataSourceDefinition.class);
+    const dataSourceDef = runtimeContext.getBean(VirtualDataSourceDefinition.class);
     const dataSource = dataSourceDef.baseCreateDataSourceVO();
     dataSource.setName(`Performance test ${dsCount}`);
     dataSource.setUpdatePeriodType(8); // MILLISECONDS
@@ -83,7 +83,7 @@ for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
 
         const inserted = dataPointService.insert(copy);
         
-        const eventType = new DataPointEventType(inserted.getId(), 0);
+        const eventType = new DataPointEventType(eventTypeDependencies, inserted.getId(), 0);
         for (let j = 0; j < eventsPerPoint; j++) {
             const time = startTime.valueOf() - (eventsPerPoint - j) * 1000;
             const event = new EventInstance(eventType, time, false, AlarmLevels.INFORMATION, new TranslatableMessage("ok"), JavaMap.of());

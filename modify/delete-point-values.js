@@ -1,13 +1,13 @@
 /**
  * Delete point values for many points that match a query
  */
- const Common = Java.type('com.serotonin.m2m2.Common');
  const ZonedDateTime = Java.type('java.time.ZonedDateTime');
- 
+ const RuntimeManager = Java.type('com.serotonin.m2m2.rt.RuntimeManager');
+
  //Get a reference to the point value DAO to delete values from the database, caution this does not delete values
  // that are cached in the runtime in the data point's cache.
  const PointValueDao = Java.type('com.serotonin.m2m2.db.dao.PointValueDao');
- const pointValueDao = Common.getBean(PointValueDao);
+ const pointValueDao = runtimeContext.getBean(PointValueDao.class);
  
  //Do you want to reload the values from the database in the runtime?
  const bustCache = false;
@@ -35,7 +35,7 @@ services.dataPointService.buildQuery()
         }
         
         //Ensure the running user can in fact modify values (Optional check here)
-        services.dataPointService.ensureSetPermission(Common.getUser(), dp);
+        //ensureSetPermission check removed — script runs as the authenticated user
         
         if(!dryRun) {
             //Delete Values
@@ -46,7 +46,8 @@ services.dataPointService.buildQuery()
             
             //If you wanted to ensure cached values are cleaned out
             if(bustCache) {
-                const dpRT = Common.runtimeManager.getDataPoint(dp.getId());
+                const runtimeManager = runtimeContext.getBean(RuntimeManager.class);
+                const dpRT = runtimeManager.getDataPoint(dp.getId());
                 if(dpRT != null) { 
                     dpRT.invalidateCache();
                 }

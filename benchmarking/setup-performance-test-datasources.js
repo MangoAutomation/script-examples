@@ -1,5 +1,4 @@
 // import classes
-const ModuleRegistry = Java.type('com.serotonin.m2m2.module.ModuleRegistry');
 const PersistentDataSourceDefinition = Java.type('com.serotonin.m2m2.persistent.PersistentDataSourceDefinition');
 
 // import services
@@ -11,7 +10,7 @@ const sharedKey = '';
 const firstPort = 8090;
 
 for (let dsCount = 0; dsCount < numDataSources; dsCount++) {
-    const dataSourceDef = ModuleRegistry.getDefinition(PersistentDataSourceDefinition.class);
+    const dataSourceDef = runtimeContext.getBean(PersistentDataSourceDefinition.class);
     const dataSource = dataSourceDef.baseCreateDataSourceVO();
     dataSource.setEnabled(true);
     dataSource.setName(`Performance test ${dsCount}`);

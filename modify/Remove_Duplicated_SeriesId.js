@@ -37,9 +37,8 @@ function readCsv(fileStore, filePath) {
     return lines;
 }
 
-const Common = Java.type('com.serotonin.m2m2.Common');
 const DataPointDao = Java.type('com.serotonin.m2m2.db.dao.DataPointDao');
-const dataPointDao = Common.getBean(DataPointDao);
+const dataPointDao = runtimeContext.getBean(DataPointDao.class);
 
 const pointsArray = readCsv('default', '9999.csv');
 

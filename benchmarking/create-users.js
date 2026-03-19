@@ -8,6 +8,10 @@ const User = Java.type('com.serotonin.m2m2.vo.User');
 const RoleVO = Java.type('com.serotonin.m2m2.vo.role.RoleVO');
 const HashSet = Java.type('java.util.HashSet');
 const Arrays = Java.type('java.util.Arrays');
+const PermissionService = Java.type('com.infiniteautomation.mango.spring.service.PermissionService');
+const PasswordService = Java.type('com.infiniteautomation.mango.spring.service.PasswordService');
+const permissionService = runtimeContext.getBean(PermissionService.class);
+const passwordService = runtimeContext.getBean(PasswordService.class);
 
 // import services
 const usersService = services.usersService;
@@ -36,7 +40,7 @@ try {
 try {
     usersService.get('non-admin-benchmark');
 }catch(error) {
-    const nonAdmin = new User();
+    const nonAdmin = new User(permissionService, passwordService);
     nonAdmin.setName('non admin benchmark');
     nonAdmin.setUsername('non-admin-benchmark');
     nonAdmin.setPassword('{PLAINTEXT}benchmark');

@@ -3,12 +3,11 @@
  */
 
 const UpdateDetectorVO = Java.type('com.serotonin.m2m2.vo.event.detector.UpdateDetectorVO');
-const TimePeriods = Java.type('com.serotonin.m2m2.Common.TimePeriods');
-const ModuleRegistry = Java.type('com.serotonin.m2m2.module.ModuleRegistry');
+const Common = Java.type('com.serotonin.m2m2.Common');
 const MultistateStateEventDetectorDefinition = Java.type('com.serotonin.m2m2.module.definitions.event.detectors.MultistateStateEventDetectorDefinition');
 
 const eventDetectorsService = services.eventDetectorsService;
-const definition = ModuleRegistry.getEventDetectorDefinition(MultistateStateEventDetectorDefinition.TYPE_NAME);
+const definition = runtimeContext.getBean(MultistateStateEventDetectorDefinition.class);
 
 let count = 0;
 
@@ -17,7 +16,7 @@ const upgradeDetector = function(detector) {
         const newDetector = definition.baseCreateEventDetectorVO(detector.getDataPoint());
         newDetector.setState(1);
         newDetector.setDuration(0);
-        newDetector.setDurationType(TimePeriods.SECONDS);
+        newDetector.setDurationType(Common.TimePeriods.SECONDS);
 
         newDetector.setName(detector.getName());
         newDetector.setEditPermission(detector.getEditPermission());

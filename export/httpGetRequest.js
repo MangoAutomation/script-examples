@@ -1,29 +1,25 @@
 /**
  * Script example to make an HTTP GET request to mango on localhost:8080 using token auth,
- *  this will retrieve all users that the executing user can read
+ *  this will retrieve all users that the executing user can read.
+ *
+ * NOTE: HttpBuilder is NOT available in filestore scripts (only in Meta/EventHandler scripts).
+ * Use Java's built-in java.net.http.HttpClient instead (requires Java 11+).
  */
- 
-const Common = Java.type('com.serotonin.m2m2.Common');
-const HttpGet = Java.type('org.apache.http.client.methods.HttpGet');
-const BasicHeader = Java.type('org.apache.http.message.BasicHeader');
-const HttpHeaders = Java.type('org.apache.http.HttpHeaders');
-const HttpResponse = Java.type('org.apache.http.HttpResponse');
-const EntityUtils = Java.type('org.apache.http.util.EntityUtils');
 
-const timeoutMs = 3000;
-const retries = 0;
-
-const url = 'http://localhost:8080/rest/latest/users'
+const url = 'http://localhost:8080/rest/latest/users';
 const token = 'your-user-token-here';
 
+const HttpClient = Java.type('java.net.http.HttpClient');
+const HttpRequest = Java.type('java.net.http.HttpRequest');
+const HttpResponse = Java.type('java.net.http.HttpResponse');
+const URI = Java.type('java.net.URI');
 
-const httpClient = Common.getHttpClient(timeoutMs, retries);
-const request = new HttpGet(url);
+const client = HttpClient.newHttpClient();
+const request = HttpRequest.newBuilder()
+    .uri(URI.create(url))
+    .header('Authorization', 'Bearer ' + token)
+    .GET()
+    .build();
 
-request.setHeader(new BasicHeader(HttpHeaders.AUTHORIZATION, 'Bearer ' + token));
-
-const response = httpClient.execute(request);
-const responseEntity = response.getEntity();
-const responseBody = EntityUtils.toString(responseEntity);
-
-print(responseBody);
+const response = client.send(request, HttpResponse.BodyHandlers.ofString());
+print(response.body());
