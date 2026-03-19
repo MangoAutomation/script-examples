@@ -22,12 +22,12 @@ const userCommentDao = Common.getBean(UserCommentDao.class);
 // configuration parameters
 const numDataSources = 1; // number of data sources to create
 const updatePeriod = 5000; // update period in milliseconds
-const pointsPerDataSource = 1000; // number of points per data source
+const pointsPerDataSource = 3; // number of points per data source
 const tagsPerPoint = 5; // actual number of tags added to each point
 const possibleTagKeys = 10; // number of tag keys that are possible
 const possibleTagValues = 30; // number of values per tag that are possible
-const eventsPerPoint = 1000; // number of events to insert per point
-const maxCommentsPerEvent = 3; // max number of comments per event
+const eventsPerPoint = 3; // number of events to insert per point
+const maxCommentsPerEvent = 1; // max number of comments per event
 
 const tags = {};
 for (let i = 0; i < possibleTagKeys; i++) {

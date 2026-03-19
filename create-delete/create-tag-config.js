@@ -3,7 +3,7 @@
  */
 
 // number of points to create
-const count = 100_000;
+const count = 5;
 const numberOfTagKeys = 10;
 const valuesPerTagKey = 10;
 const tagsPerPoint = 5;

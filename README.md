@@ -6,6 +6,10 @@ Save the script file into a file store. When you edit the file you will see a bu
 
 ![image](https://user-images.githubusercontent.com/3579645/82088124-6d45fa80-96ae-11ea-9702-34637e5d0902.png)
 
+## Documentation
+
+- [Script compatibility with Mango 5.7.x](docs/compatibility.md)
+
 ## Running scripts via the CLI (`eval_script.py`)
 
 `eval_script.py` is a Python 3 command-line tool that executes a filestore script against the Mango REST API without opening the UI.

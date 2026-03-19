@@ -16,8 +16,8 @@ const xids = ['DS_7f6560b9-407a-4ba1-91a1-76e9a29d578d',
 
 
 //Generate history forward from this time in the past
-const startTimePeriodType = 'MONTHS';
-const startTimePeriods = 6;
+const startTimePeriodType = 'MINUTES';
+const startTimePeriods = 30;
 const msBack = Common.getMillis(Common.TIME_PERIOD_CODES.getId(startTimePeriodType), startTimePeriods);
 const now = new Date().getTime();
 const startDate = new Date(now - msBack);

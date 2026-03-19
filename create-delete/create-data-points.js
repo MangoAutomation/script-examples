@@ -3,7 +3,7 @@
  */
 
 // number of points to create
-const count = 1000;
+const count = 5;
 // template point's XID
 const dataPointTemplateXid = 'DP_41d00264-dc35-4d5b-bd7b-0f8da2296210';
 // The publisher XID to add all of the data points to (this script assumes it is a Persistent TCP publisher)
